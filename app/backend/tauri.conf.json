@@ -36,7 +36,7 @@
       "icons/icon.png"
     ],
     "externalBin": [
-      "binaries/SiYuan-Kernel"
+      "SiYuan-Kernel"
     ]
   }
 }

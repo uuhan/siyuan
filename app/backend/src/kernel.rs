@@ -10,7 +10,7 @@ use tauri_plugin_shell::ShellExt;
 // All knowledge of the Go kernel's HTTP API lives here. If the kernel
 // changes its routes, only these constants need updating.
 
-const SIDECAR_NAME: &str = "binaries/SiYuan-Kernel";
+const SIDECAR_NAME: &str = "SiYuan-Kernel";
 const KERNEL_HOST: &str = "127.0.0.1";
 
 /// Kernel HTTP API endpoints.

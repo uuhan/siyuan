@@ -9,7 +9,7 @@ version     := `jq -r .version app/package.json`
 kernel_dir  := "kernel"
 app_dir     := "app"
 backend_dir := "app/backend"
-bin_dir     := "app/backend/binaries"
+bin_dir     := "app/backend"
 
 # Auto-detect platform
 os   := os()

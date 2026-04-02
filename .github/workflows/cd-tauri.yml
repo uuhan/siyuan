@@ -126,7 +126,7 @@ jobs:
         run: |
           go build -tags fts5 -v \
             -ldflags "${GO_BUILD_FLAGS} -X github.com/${GITHUB_REPOSITORY}/kernel/util.Mode=prod" \
-            -o "../app/backend/binaries/SiYuan-Kernel-${RUST_TARGET}${KERNEL_EXT}"
+            -o "../app/backend/SiYuan-Kernel-${RUST_TARGET}${KERNEL_EXT}"
         env:
           GO111MODULE: "on"
           CGO_ENABLED: "1"
