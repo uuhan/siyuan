@@ -1,0 +1,43 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicholasyang/tauri/dev/crates/tauri-schema/schema.json",
+  "productName": "SiYuan",
+  "version": "3.6.2",
+  "identifier": "org.b3log.siyuan",
+  "build": {
+    "beforeDevCommand": "pnpm dev:tauri",
+    "beforeBuildCommand": "pnpm build:tauri",
+    "devUrl": "http://127.0.0.1:6806/stage/build/app/",
+    "frontendDist": "../stage/build/app/"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "enableGTKAppId": false,
+    "macOSPrivateApi": true,
+    "windows": [
+      {
+        "title": "SiYuan",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 493,
+        "minHeight": 376,
+        "decorations": false,
+        "transparent": true,
+        "visible": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://127.0.0.1:* ws://127.0.0.1:* wss://127.0.0.1:* https: data: blob:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["deb", "appimage", "msi", "dmg"],
+    "icon": [
+      "icons/icon.png",
+      "icons/icon.ico"
+    ],
+    "externalBin": [
+      "binaries/SiYuan-Kernel"
+    ]
+  }
+}
