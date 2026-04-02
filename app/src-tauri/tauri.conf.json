@@ -33,8 +33,7 @@
     "active": true,
     "targets": ["deb", "appimage", "msi", "dmg"],
     "icon": [
-      "icons/icon.png",
-      "icons/icon.ico"
+      "icons/icon.png"
     ],
     "externalBin": [
       "binaries/SiYuan-Kernel"
