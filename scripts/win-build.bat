@@ -62,8 +62,8 @@ if "%TARGET%"=="amd64" (
 
 echo Cleaning Builds
 rmdir /S /Q "%PROJECT_ROOT%\app\build" 1>nul
-rmdir /S /Q "%PROJECT_ROOT%\app\kernel" 1>nul
-rmdir /S /Q "%PROJECT_ROOT%\app\kernel-arm64" 1>nul
+del /F /Q "%PROJECT_ROOT%\app\backend\SiYuan-Kernel-x86_64-pc-windows-msvc.exe" 1>nul 2>nul
+del /F /Q "%PROJECT_ROOT%\app\backend\SiYuan-Kernel-aarch64-pc-windows-msvc.exe" 1>nul 2>nul
 
 echo.
 echo Building UI
@@ -75,7 +75,7 @@ call pnpm install
 if errorlevel 1 (
     exit /b %errorlevel%
 )
-call pnpm run build
+call pnpm run build:tauri
 if errorlevel 1 (
     exit /b %errorlevel%
 )
@@ -101,7 +101,7 @@ if defined BUILD_AMD64 (
     echo.
     echo Building Kernel amd64
     set GOARCH=amd64
-    go build -tags fts5 -v -o "%PROJECT_ROOT%\app\kernel\SiYuan-Kernel.exe" -ldflags "-s -w -H=windowsgui" .
+    go build -tags fts5 -v -o "%PROJECT_ROOT%\app\backend\SiYuan-Kernel-x86_64-pc-windows-msvc.exe" -ldflags "-s -w -H=windowsgui" .
     if errorlevel 1 (
         exit /b %errorlevel%
     )
@@ -112,41 +112,39 @@ if defined BUILD_ARM64 (
     set GOARCH=arm64
     @REM if you want to build arm64, you need to install aarch64-w64-mingw32-gcc
     set CC="D:/Program Files/llvm-mingw-20240518-ucrt-x86_64/bin/aarch64-w64-mingw32-gcc.exe"
-    go build -tags fts5 -v -o "%PROJECT_ROOT%\app\kernel-arm64\SiYuan-Kernel.exe" -ldflags "-s -w -H=windowsgui" .
+    go build -tags fts5 -v -o "%PROJECT_ROOT%\app\backend\SiYuan-Kernel-aarch64-pc-windows-msvc.exe" -ldflags "-s -w -H=windowsgui" .
     if errorlevel 1 (
         exit /b %errorlevel%
     )
 )
 
-if defined BUILD_AMD64 goto electron
-if defined BUILD_ARM64 goto electron
-goto :skipelectron
-:electron
+if defined BUILD_AMD64 goto tauri
+if defined BUILD_ARM64 goto tauri
+goto :skiptauri
+:tauri
 echo.
-echo Building Electron App
-cd /d "%PROJECT_ROOT%\app"
+echo Building Tauri App
+cd /d "%PROJECT_ROOT%\app\backend"
 if errorlevel 1 (
     exit /b %errorlevel%
 )
 if defined BUILD_AMD64 (
     echo.
-    echo Building Electron App amd64
-    copy "%PROJECT_ROOT%\app\elevator\elevator-amd64.exe" "%PROJECT_ROOT%\app\kernel\elevator.exe"
-    call pnpm run dist
+    echo Building Tauri App amd64
+    cargo tauri build --target x86_64-pc-windows-msvc --bundles msi
     if errorlevel 1 (
         exit /b %errorlevel%
     )
 )
 if defined BUILD_ARM64 (
     echo.
-    echo Building Electron App arm64
-    copy "%PROJECT_ROOT%\app\elevator\elevator-arm64.exe" "%PROJECT_ROOT%\app\kernel-arm64\elevator.exe"
-    call pnpm run dist-arm64
+    echo Building Tauri App arm64
+    cargo tauri build --target aarch64-pc-windows-msvc --bundles msi
     if errorlevel 1 (
         exit /b %errorlevel%
     )
 )
-:skipelectron
+:skiptauri
 
 if defined BUILD_APPX_AMD64 goto appx
 if defined BUILD_APPX_ARM64 goto appx

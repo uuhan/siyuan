@@ -3,7 +3,7 @@
 <br>
 <em>Düşünceni Yeniden Şekillendir</em>
 <br><br>
-<a title="Derleme Durumu" target="_blank" href="https://github.com/siyuan-note/siyuan/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/siyuan-note/siyuan/cd.yml?style=flat-square"></a>
+<a title="Derleme Durumu" target="_blank" href="https://github.com/siyuan-note/siyuan/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/siyuan-note/siyuan/cd-tauri.yml?style=flat-square"></a>
 <a title="Sürümler" target="_blank" href="https://github.com/siyuan-note/siyuan/releases"><img src="https://img.shields.io/github/release/siyuan-note/siyuan.svg?style=flat-square&color=9CF"></a>
 <a title="İndirme Sayısı" target="_blank" href="https://github.com/siyuan-note/siyuan/releases"><img src="https://img.shields.io/github/downloads/siyuan-note/siyuan/total.svg?style=flat-square&color=blueviolet"></a>
 <br>
@@ -188,7 +188,7 @@ SiYuan’ı bir sunucuda çalıştırmanın en kolay yolu Docker üzerinden dağ
 
 #### Dosya Yapısı
 
-Tüm program `/opt/siyuan/` dizini altındadır. Bu dizin, Electron kurulum paketinin `resources` klasör yapısına karşılık gelir:
+Tüm program `/opt/siyuan/` dizini altındadır. Bu dizin, masaüstü kurulum paketinin `resources` klasör yapısına karşılık gelir:
 
 * **appearance**: simgeler, temalar, diller  
 * **guide**: kullanıcı kılavuzu belgeleri  

@@ -184,6 +184,14 @@
     "shell:allow-kill",
     "shell:allow-stdin-write",
 
+    "dialog:default",
+    "dialog:allow-open",
+    "dialog:allow-save",
+
+    "clipboard-manager:default",
+    "clipboard-manager:allow-read-text",
+    "clipboard-manager:allow-write-text",
+
     "process:default",
     "process:allow-exit",
     "process:allow-restart",

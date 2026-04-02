@@ -139,6 +139,12 @@ const getSnippetJS = () => {
 
 /// #if !BROWSER
 const renderPDF = async (id: string) => {
+    /// #if TAURI
+    const localData = window.siyuan.storage[Constants.LOCAL_EXPORTPDF];
+    getExportPath({id, type: "pdf"}, localData.removeAssets, localData.mergeSubdocs);
+    return;
+    /// #endif
+
     const localData = window.siyuan.storage[Constants.LOCAL_EXPORTPDF];
     if (typeof localData.paged === "undefined") {
         localData.paged = true;

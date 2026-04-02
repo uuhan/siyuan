@@ -281,7 +281,7 @@ export const tauriPlatform: IPlatformAPI = {
                 decorations: false,
                 transparent: true,
             });
-            await windowInstance.once("tauri://error", () => {
+            windowInstance.once("tauri://error", () => {
                 this.openExternal(url);
             });
         }

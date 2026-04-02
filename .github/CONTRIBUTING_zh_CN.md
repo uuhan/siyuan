@@ -12,12 +12,9 @@
 <details>
 <summary>适用于中国大陆</summary>
 
-设置 Electron 镜像环境变量并安装 Electron：
+安装依赖：
 
-* macOS/Linux：`ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ pnpm install electron@40.8.5 -D`
-* Windows：
-  * `SET ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/`
-  * `pnpm install electron@40.8.5 -D`
+* `pnpm install --no-frozen-lockfile`
 
 NPM 镜像：
 
@@ -27,9 +24,8 @@ NPM 镜像：
 
 进入 app 文件夹执行：
 
-* `pnpm install electron@40.8.5 -D`
-* `pnpm run dev`
-* `pnpm run start`
+* `pnpm install --no-frozen-lockfile`
+* `pnpm run dev:tauri`
 
 注意：在开发环境下不会自动拉起内核进程，需要先手动拉起内核进程。
 

@@ -48,14 +48,14 @@ done
 
 echo 'Cleaning Builds'
 rm -rf "$PROJECT_ROOT/app/build" 2>/dev/null || true
-rm -rf "$PROJECT_ROOT/app/kernel-darwin" 2>/dev/null || true
-rm -rf "$PROJECT_ROOT/app/kernel-darwin-arm64" 2>/dev/null || true
+rm -f "$PROJECT_ROOT/app/backend/SiYuan-Kernel-x86_64-apple-darwin" 2>/dev/null || true
+rm -f "$PROJECT_ROOT/app/backend/SiYuan-Kernel-aarch64-apple-darwin" 2>/dev/null || true
 
 echo
 echo 'Building UI'
 cd "$PROJECT_ROOT/app"
 pnpm install
-pnpm run build
+pnpm run build:tauri
 
 echo
 echo 'Building Kernel'
@@ -70,27 +70,27 @@ if [[ "$TARGET" == 'amd64' || "$TARGET" == 'all' ]]; then
     echo
     echo 'Building Kernel amd64'
     export GOARCH=amd64
-    go build -tags fts5 -v -o "../app/kernel-darwin/SiYuan-Kernel" -ldflags "-s -w" .
+    go build -tags fts5 -v -o "../app/backend/SiYuan-Kernel-x86_64-apple-darwin" -ldflags "-s -w" .
 fi
 if [[ "$TARGET" == 'arm64' || "$TARGET" == 'all' ]]; then
     echo
     echo 'Building Kernel arm64'
     export GOARCH=arm64
-    go build -tags fts5 -v -o "../app/kernel-darwin-arm64/SiYuan-Kernel" -ldflags "-s -w" .
+    go build -tags fts5 -v -o "../app/backend/SiYuan-Kernel-aarch64-apple-darwin" -ldflags "-s -w" .
 fi
 
 echo
-echo 'Building Electron App'
-cd "$PROJECT_ROOT/app"
+echo 'Building Tauri App'
+cd "$PROJECT_ROOT/app/backend"
 if [[ "$TARGET" == 'amd64' || "$TARGET" == 'all' ]]; then
     echo
-    echo 'Building Electron App amd64'
-    pnpm run dist-darwin
+    echo 'Building Tauri App amd64'
+    cargo tauri build --target x86_64-apple-darwin --bundles dmg
 fi
 if [[ "$TARGET" == 'arm64' || "$TARGET" == 'all' ]]; then
     echo
-    echo 'Building Electron App arm64'
-    pnpm run dist-darwin-arm64
+    echo 'Building Tauri App arm64'
+    cargo tauri build --target aarch64-apple-darwin --bundles dmg
 fi
 
 echo
