@@ -55,7 +55,7 @@ def generate_header_from_repo(repo_name, tag_name, lastestRelease, action_file, 
 <a href="https://github.com/{repo_name}/actions/workflows/{action_file}"><img src="https://img.shields.io/github/actions/workflow/status/{repo_name}/{action_file}?logo=github&label={action_file}%20Action" style="cursor:pointer;height: 30px;margin: 3px auto;"/></a>
 <a href="https://github.com/{repo_name}/releases/{thisRelease}/"><img src="https://img.shields.io/github/downloads/{repo_name}/{thisRelease}/total?logo=github" style="cursor:pointer;height: 30px;margin: 3px auto;"/></a>
 <img alt="GitHub commits difference between two branches/tags/commits" src="https://img.shields.io/github/commits-difference/{repo_name}?base={lastestRelease}&head={thisRelease}&logo=git" style="cursor:pointer;height: 30px;margin: 3px auto;"/>
-<img src="https://img.shields.io/badge/Desktop-Tauri-24C8DB.svg?style=flat&logo=tauri&logoColor=white" alt="Tauri">
+<img src="https://img.shields.io/badge/Desktop%20Runtime-Tauri-24C8DB.svg?style=flat&logo=tauri&logoColor=white" alt="Tauri">
 </p>
 
 {HEADER}'''

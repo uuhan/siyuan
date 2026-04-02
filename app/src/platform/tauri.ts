@@ -7,7 +7,7 @@ const getTauriEvent = () => import("@tauri-apps/api/event");
 const getTauriDialog = () => import("@tauri-apps/plugin-dialog");
 const getTauriClipboard = () => import("@tauri-apps/plugin-clipboard-manager");
 
-const tauriDialogPropertiesToOptions = (options: any = {}) => {
+const mapDialogOptions = (options: any = {}) => {
     const properties: string[] = Array.isArray(options?.properties) ? options.properties : [];
     const directory = properties.includes("openDirectory");
     const multiple = properties.includes("multiSelections");
@@ -110,7 +110,7 @@ export const tauriPlatform: IPlatformAPI = {
 
     async showOpenDialog(options: any) {
         const {open} = await getTauriDialog();
-        const result = await open(tauriDialogPropertiesToOptions(options));
+        const result = await open(mapDialogOptions(options));
         if (!result) {
             return {canceled: true, filePaths: []};
         }
@@ -267,24 +267,28 @@ export const tauriPlatform: IPlatformAPI = {
     },
     async openNewWindow(data: any) {
         const url = data?.url;
-        if (url) {
-            const {WebviewWindow} = await import("@tauri-apps/api/webviewWindow");
-            const label = `window-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-            const windowInstance = new WebviewWindow(label, {
-                url,
-                title: "SiYuan",
-                width: data?.width || 1200,
-                height: data?.height || 800,
-                x: data?.position?.x,
-                y: data?.position?.y,
-                alwaysOnTop: !!data?.alwaysOnTop,
-                decorations: false,
-                transparent: true,
-            });
-            windowInstance.once("tauri://error", () => {
-                this.openExternal(url);
-            });
+        if (!url) {
+            return;
         }
+        const {WebviewWindow} = await import("@tauri-apps/api/webviewWindow");
+        const label = `window-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const windowInstance = new WebviewWindow(label, {
+            url,
+            title: "SiYuan",
+            width: data?.width || 1200,
+            height: data?.height || 800,
+            x: data?.position?.x,
+            y: data?.position?.y,
+            alwaysOnTop: !!data?.alwaysOnTop,
+            decorations: false,
+            transparent: true,
+        });
+        windowInstance.once("tauri://created", () => {
+            // no-op: explicit success path
+        });
+        windowInstance.once("tauri://error", () => {
+            this.openExternal(url);
+        });
     },
     async openFileInWindow(_data: any) {
         // Single window MVP: no-op
