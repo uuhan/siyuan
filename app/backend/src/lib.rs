@@ -18,12 +18,7 @@ pub fn run() {
             tauri::async_runtime::spawn(async move {
                 match kernel::boot_kernel(&app_handle).await {
                     Ok(port) => {
-                        // Navigate main window to kernel's UI
-                        let url = format!(
-                            "http://127.0.0.1:{}/stage/build/app/?v={}",
-                            port,
-                            env!("CARGO_PKG_VERSION")
-                        );
+                        let url = kernel::frontend_url(port);
                         if let Some(window) = app_handle.get_webview_window("main") {
                             let _ = window.navigate(url.parse().unwrap());
                             let _ = window.show();
@@ -39,7 +34,6 @@ pub fn run() {
         })
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
-                // Graceful shutdown: tell kernel to exit
                 let app = window.app_handle().clone();
                 tauri::async_runtime::spawn(async move {
                     if let Some(state) = app.try_state::<kernel::KernelState>() {

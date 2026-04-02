@@ -105,7 +105,7 @@ jobs:
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: app/src-tauri -> target
+          workspaces: app/backend -> target
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -126,7 +126,7 @@ jobs:
         run: |
           go build -tags fts5 -v \
             -ldflags "${GO_BUILD_FLAGS} -X github.com/${GITHUB_REPOSITORY}/kernel/util.Mode=prod" \
-            -o "../app/src-tauri/binaries/SiYuan-Kernel-${RUST_TARGET}${KERNEL_EXT}"
+            -o "../app/backend/binaries/SiYuan-Kernel-${RUST_TARGET}${KERNEL_EXT}"
         env:
           GO111MODULE: "on"
           CGO_ENABLED: "1"
@@ -136,23 +136,17 @@ jobs:
           RUST_TARGET: ${{ matrix.config.rust_target }}
           KERNEL_EXT: ${{ matrix.config.kernel_ext }}
 
-      # --- Build Frontend ---
+      # --- Build Tauri App (frontend build is handled by beforeBuildCommand) ---
 
       - name: Install Node dependencies
         working-directory: app
         run: pnpm install --no-frozen-lockfile
 
-      - name: Build frontend (Tauri)
-        working-directory: app
-        run: pnpm build:tauri
-
-      # --- Build Tauri App ---
-
       - name: Install Tauri CLI
         run: cargo install tauri-cli --version "^2"
 
       - name: Build Tauri bundle
-        working-directory: app/src-tauri
+        working-directory: app/backend
         shell: bash
         run: cargo tauri build --target "$RUST_TARGET" --bundles "$BUNDLE_EXT"
         env:
@@ -166,8 +160,8 @@ jobs:
         with:
           name: siyuan-tauri-${{ steps.version.outputs.value }}-${{ matrix.config.name }}
           path: |
-            app/src-tauri/target/${{ matrix.config.rust_target }}/release/bundle/**/*.dmg
-            app/src-tauri/target/${{ matrix.config.rust_target }}/release/bundle/**/*.AppImage
-            app/src-tauri/target/${{ matrix.config.rust_target }}/release/bundle/**/*.deb
-            app/src-tauri/target/${{ matrix.config.rust_target }}/release/bundle/**/*.msi
+            app/backend/target/${{ matrix.config.rust_target }}/release/bundle/**/*.dmg
+            app/backend/target/${{ matrix.config.rust_target }}/release/bundle/**/*.AppImage
+            app/backend/target/${{ matrix.config.rust_target }}/release/bundle/**/*.deb
+            app/backend/target/${{ matrix.config.rust_target }}/release/bundle/**/*.msi
           if-no-files-found: error

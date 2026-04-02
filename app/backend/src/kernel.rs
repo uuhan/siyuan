@@ -6,6 +6,40 @@ use std::time::Duration;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_shell::ShellExt;
 
+// ── Kernel protocol constants ──────────────────────────────────────────
+// All knowledge of the Go kernel's HTTP API lives here. If the kernel
+// changes its routes, only these constants need updating.
+
+const SIDECAR_NAME: &str = "binaries/SiYuan-Kernel";
+const KERNEL_HOST: &str = "127.0.0.1";
+
+/// Kernel HTTP API endpoints.
+mod api {
+    pub const VERSION: &str = "/api/system/version";
+    pub const BOOT_PROGRESS: &str = "/api/system/bootProgress";
+    pub const EXIT: &str = "/api/system/exit";
+}
+
+/// Frontend entry point served by the kernel's static file server.
+pub const FRONTEND_PATH: &str = "/stage/build/app/";
+
+/// Kernel process exit codes (defined in kernel/util/exit_code.go).
+mod exit_code {
+    pub const DB_UNAVAILABLE: i32 = 20;
+    pub const PORT_LISTEN_FAILED: i32 = 21;
+    pub const WORKSPACE_LOCKED: i32 = 24;
+    pub const WORKSPACE_INIT_FAILED: i32 = 25;
+    pub const DATA_CORRUPTION_PREVENTION: i32 = 26;
+}
+
+/// Boot polling configuration.
+const MAX_VERSION_RETRIES: u32 = 14;
+const VERSION_RETRY_INTERVAL: Duration = Duration::from_millis(500);
+const PROGRESS_POLL_INTERVAL: Duration = Duration::from_millis(100);
+const HTTP_TIMEOUT: Duration = Duration::from_secs(2);
+
+// ── State ──────────────────────────────────────────────────────────────
+
 /// Managed state holding the kernel port and child process handle.
 pub struct KernelState {
     port: AtomicU16,
@@ -33,9 +67,26 @@ impl KernelState {
     }
 }
 
+// ── Helpers ────────────────────────────────────────────────────────────
+
+fn kernel_url(port: u16, path: &str) -> String {
+    format!("http://{}:{}{}", KERNEL_HOST, port, path)
+}
+
+/// Build the URL the webview should navigate to after the kernel is ready.
+pub fn frontend_url(port: u16) -> String {
+    format!(
+        "http://{}:{}{}?v={}",
+        KERNEL_HOST,
+        port,
+        FRONTEND_PATH,
+        env!("CARGO_PKG_VERSION")
+    )
+}
+
 /// Find an available TCP port on localhost.
 fn find_available_port() -> Result<u16, String> {
-    let listener = TcpListener::bind("127.0.0.1:0")
+    let listener = TcpListener::bind(format!("{}:0", KERNEL_HOST))
         .map_err(|e| format!("Failed to bind to find available port: {}", e))?;
     let port = listener
         .local_addr()
@@ -46,20 +97,46 @@ fn find_available_port() -> Result<u16, String> {
 }
 
 /// Resolve the working directory (where stage/, appearance/, etc. live).
+///
+/// - Dev mode (`cfg(dev)`): the app/ directory (project root)
+/// - Production: the Tauri resource directory (bundled alongside the binary)
 fn resolve_working_dir(app: &AppHandle) -> String {
-    let resource_dir = app
-        .path()
-        .resource_dir()
-        .unwrap_or_else(|_| std::env::current_dir().unwrap());
-    resource_dir.to_string_lossy().to_string()
+    if cfg!(dev) {
+        // In dev mode, app/ is the parent of src-tauri/
+        let manifest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+        manifest_dir
+            .parent()
+            .unwrap_or(manifest_dir)
+            .to_string_lossy()
+            .to_string()
+    } else {
+        app.path()
+            .resource_dir()
+            .unwrap_or_else(|_| std::env::current_dir().unwrap())
+            .to_string_lossy()
+            .to_string()
+    }
 }
 
-/// Resolve the default workspace directory.
+/// Resolve the default workspace directory (~/.SiYuan).
 fn resolve_workspace_dir() -> String {
     let home = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
-    let workspace = home.join("SiYuan");
-    workspace.to_string_lossy().to_string()
+    home.join("SiYuan").to_string_lossy().to_string()
 }
+
+/// Map a kernel exit code to a human-readable error message.
+fn exit_code_message(code: i32) -> &'static str {
+    match code {
+        exit_code::DB_UNAVAILABLE => "Database is unavailable",
+        exit_code::PORT_LISTEN_FAILED => "Failed to listen on port",
+        exit_code::WORKSPACE_LOCKED => "Workspace is locked by another instance",
+        exit_code::WORKSPACE_INIT_FAILED => "Failed to initialize workspace directory",
+        exit_code::DATA_CORRUPTION_PREVENTION => "Data corruption prevention: files occupied by third-party software",
+        _ => "Kernel exited for unknown reasons",
+    }
+}
+
+// ── Boot / Shutdown ────────────────────────────────────────────────────
 
 /// Boot the Go kernel sidecar and wait for it to be ready.
 pub async fn boot_kernel(app: &AppHandle) -> Result<u16, String> {
@@ -72,10 +149,10 @@ pub async fn boot_kernel(app: &AppHandle) -> Result<u16, String> {
         port, wd, workspace
     );
 
-    // Build sidecar command
+    // Spawn sidecar
     let shell = app.shell();
     let (mut rx, child) = shell
-        .sidecar("binaries/SiYuan-Kernel")
+        .sidecar(SIDECAR_NAME)
         .map_err(|e| format!("Failed to create sidecar command: {}", e))?
         .args([
             "--port",
@@ -107,7 +184,16 @@ pub async fn boot_kernel(app: &AppHandle) -> Result<u16, String> {
                     eprintln!("[kernel stderr] {}", String::from_utf8_lossy(&line));
                 }
                 CommandEvent::Terminated(payload) => {
-                    eprintln!("Kernel terminated: {:?}", payload);
+                    let code = payload.code.unwrap_or(-1);
+                    if code != 0 {
+                        eprintln!(
+                            "Kernel terminated with code {}: {}",
+                            code,
+                            exit_code_message(code)
+                        );
+                    } else {
+                        eprintln!("Kernel terminated normally");
+                    }
                     break;
                 }
                 CommandEvent::Error(err) => {
@@ -119,17 +205,15 @@ pub async fn boot_kernel(app: &AppHandle) -> Result<u16, String> {
         }
     });
 
-    // Poll kernel until version endpoint responds (max 14 retries, 500ms apart)
+    // Poll kernel version endpoint
     let client = reqwest::Client::new();
-    let base_url = format!("http://127.0.0.1:{}", port);
-
-    eprintln!("Waiting for kernel to be ready at {}", base_url);
+    eprintln!("Waiting for kernel to be ready...");
 
     let mut count = 0;
     loop {
         match client
-            .get(format!("{}/api/system/version", base_url))
-            .timeout(Duration::from_secs(2))
+            .get(kernel_url(port, api::VERSION))
+            .timeout(HTTP_TIMEOUT)
             .send()
             .await
         {
@@ -150,17 +234,17 @@ pub async fn boot_kernel(app: &AppHandle) -> Result<u16, String> {
         }
 
         count += 1;
-        if count > 14 {
-            return Err("Kernel failed to start after 14 retries".to_string());
+        if count > MAX_VERSION_RETRIES {
+            return Err("Kernel failed to start after max retries".to_string());
         }
-        tokio::time::sleep(Duration::from_millis(500)).await;
+        tokio::time::sleep(VERSION_RETRY_INTERVAL).await;
     }
 
     // Poll boot progress until 100%
     loop {
         match client
-            .get(format!("{}/api/system/bootProgress", base_url))
-            .timeout(Duration::from_secs(2))
+            .get(kernel_url(port, api::BOOT_PROGRESS))
+            .timeout(HTTP_TIMEOUT)
             .send()
             .await
         {
@@ -180,7 +264,7 @@ pub async fn boot_kernel(app: &AppHandle) -> Result<u16, String> {
                 return Err(format!("Failed to get boot progress: {}", e));
             }
         }
-        tokio::time::sleep(Duration::from_millis(100)).await;
+        tokio::time::sleep(PROGRESS_POLL_INTERVAL).await;
     }
 
     // Update port in state
@@ -200,7 +284,7 @@ pub async fn shutdown_kernel(port: u16) -> Result<(), String> {
     eprintln!("Shutting down kernel on port {}", port);
     let client = reqwest::Client::new();
     let _ = client
-        .post(format!("http://127.0.0.1:{}/api/system/exit", port))
+        .post(kernel_url(port, api::EXIT))
         .timeout(Duration::from_secs(5))
         .send()
         .await;
