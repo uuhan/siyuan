@@ -15,7 +15,7 @@
     <div class="b3-dialog__scrim" style="background-color: #1e1e1e"></div>
     <img style="position: absolute;width: 36vh;" src="../../icon.png">
 </div>
-<div id="toolbar" class="toolbar fn__flex"></div>
+<div id="toolbar" class="toolbar fn__flex" data-tauri-drag-region></div>
 <div class="fn__flex-1 fn__flex">
     <div id="dockLeft" class="dock dock--vertical"></div>
     <div id="layouts" class="layout fn__flex-1"></div>
