@@ -33,14 +33,6 @@ jobs:
             go_build_flags: "-s -w"
             bundle_ext: "dmg"
 
-          - os: macos-13
-            name: macos-amd64
-            goos: darwin
-            goarch: amd64
-            rust_target: x86_64-apple-darwin
-            go_build_flags: "-s -w"
-            bundle_ext: "dmg"
-
           - os: windows-latest
             name: windows-amd64
             goos: windows
