@@ -18,7 +18,7 @@ import {openFileById} from "../../editor/util";
 import {saveLayout} from "../../layout/util";
 /// #endif
 /// #if !BROWSER
-import {ipcRenderer} from "electron";
+import {platform} from "../../platform";
 /// #endif
 import {onGet} from "../util/onGet";
 import {hideElements} from "../ui/hideElements";
@@ -293,12 +293,12 @@ ${padHTML}
                         click: async () => {
                             /// #if !BROWSER
                             if (window.siyuan.config.system.os === "darwin") {
-                                const status = await ipcRenderer.invoke(Constants.SIYUAN_GET, {cmd: "getMicrophone"});
+                                const status = await platform.getMicrophoneAccess();
                                 if (["denied", "restricted", "unknown"].includes(status)) {
                                     showMessage(window.siyuan.languages.microphoneDenied);
                                     return;
                                 } else if (status === "not-determined") {
-                                    const isAccess = await ipcRenderer.invoke(Constants.SIYUAN_GET, {cmd: "askMicrophone"});
+                                    const isAccess = await platform.askMicrophoneAccess();
                                     if (!isAccess) {
                                         showMessage(window.siyuan.languages.microphoneNotAccess);
                                         return;

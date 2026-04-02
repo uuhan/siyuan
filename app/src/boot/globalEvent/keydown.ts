@@ -43,7 +43,7 @@ import {getNextFileLi, getPreviousFileLi} from "../../protyle/wysiwyg/getBlock";
 import {Backlink} from "../../layout/dock/Backlink";
 /// #if !BROWSER
 import {setZoom} from "../../layout/topBar";
-import {ipcRenderer} from "electron";
+import {platform} from "../../platform";
 /// #endif
 import {openHistory} from "../../history/history";
 import {openCard, openCardByData} from "../../card/openCard";
@@ -1752,27 +1752,18 @@ export const sendGlobalShortcut = (app: App) => {
             }
         });
     });
-    ipcRenderer.send(Constants.SIYUAN_HOTKEY, {
-        languages: window.siyuan.languages["_trayMenu"],
-        hotkeys
-    });
+    platform.registerGlobalShortcuts(hotkeys, window.siyuan.languages["_trayMenu"]);
     /// #endif
 };
 
 
 export const sendUnregisterGlobalShortcut = (app: App) => {
     /// #if !BROWSER
-    ipcRenderer.send(Constants.SIYUAN_CMD, {
-        cmd: "unregisterGlobalShortcut",
-        accelerator: window.siyuan.config.keymap.general.toggleWin.custom
-    });
+    platform.unregisterGlobalShortcut(window.siyuan.config.keymap.general.toggleWin.custom);
     app.plugins.forEach(plugin => {
         plugin.commands.forEach(command => {
             if (command.globalCallback) {
-                ipcRenderer.send(Constants.SIYUAN_CMD, {
-                    cmd: "unregisterGlobalShortcut",
-                    accelerator: command.customHotkey
-                });
+                platform.unregisterGlobalShortcut(command.customHotkey);
             }
         });
     });

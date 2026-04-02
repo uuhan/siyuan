@@ -1,7 +1,7 @@
 import {fetchPost} from "../util/fetch";
 /// #if !BROWSER
 import {afterExport} from "../protyle/export/util";
-import {ipcRenderer} from "electron";
+import {platform} from "../platform";
 import * as path from "path";
 import {exportLayout} from "../layout/util";
 /// #endif
@@ -299,8 +299,7 @@ export const exportConfig = {
                 openByMobile(response.data.zip);
             });
             /// #else
-            const result = await ipcRenderer.invoke(Constants.SIYUAN_GET, {
-                cmd: "showOpenDialog",
+            const result = await platform.showOpenDialog({
                 title: window.siyuan.languages.export + " " + "Data",
                 properties: ["createDirectory", "openDirectory"],
             });
@@ -328,8 +327,7 @@ export const exportConfig = {
         });
         const pandocBinElement = exportConfig.element.querySelector("#pandocBin") as HTMLInputElement;
         pandocBinElement.addEventListener("click", async () => {
-            const localPath = await ipcRenderer.invoke(Constants.SIYUAN_GET, {
-                cmd: "showOpenDialog",
+            const localPath = await platform.showOpenDialog({
                 defaultPath: window.siyuan.config.system.homeDir,
                 properties: ["openFile", "showHiddenFiles"],
             });

@@ -13,7 +13,7 @@ import {fetchPost, fetchSyncPost} from "../util/fetch";
 import {focusBlock, focusByOffset, focusByRange} from "../protyle/util/selection";
 import {onGet} from "../protyle/util/onGet";
 /// #if !BROWSER
-import {ipcRenderer} from "electron";
+import {platform} from "../platform";
 /// #endif
 import {pushBack} from "../util/backForward";
 import {Asset} from "../asset";
@@ -210,8 +210,7 @@ export const openFile = async (options: IOpenFileOptions) => {
                 optionsClone[key] = JSON.parse(JSON.stringify(options[key]));
             }
         });
-        hasMatch = await ipcRenderer.invoke(Constants.SIYUAN_GET, {
-            cmd: Constants.SIYUAN_OPEN_FILE,
+        hasMatch = await platform.openFileInWindow({
             options: JSON.stringify(optionsClone),
             port: location.port,
         });

@@ -6,7 +6,7 @@ import {exportLayout} from "../layout/util";
 import {confirmDialog} from "../dialog/confirmDialog";
 import {App} from "../index";
 /// #if !BROWSER
-import {ipcRenderer} from "electron";
+import {platform} from "../platform";
 import {sendUnregisterGlobalShortcut} from "../boot/globalEvent/keydown";
 /// #endif
 import {sendGlobalShortcut} from "../boot/globalEvent/keydown";
@@ -222,10 +222,7 @@ export const keymap = {
                             if (command.langKey === keys[2]) {
                                 /// #if !BROWSER
                                 if (command.globalCallback && command.customHotkey && command.customHotkey !== newHotkey) {
-                                    ipcRenderer.send(Constants.SIYUAN_CMD, {
-                                        cmd: "unregisterGlobalShortcut",
-                                        accelerator: command.customHotkey
-                                    });
+                                    platform.unregisterGlobalShortcut(command.customHotkey);
                                 }
                                 /// #endif
                                 command.customHotkey = newHotkey;
@@ -244,15 +241,9 @@ export const keymap = {
             data
         }, () => {
             /// #if !BROWSER
-            ipcRenderer.send(Constants.SIYUAN_CMD, {
-                cmd: "writeLog",
-                msg: "user update keymap:" + JSON.stringify(window.siyuan.config.keymap)
-            });
+            platform.writeLog("user update keymap:" + JSON.stringify(window.siyuan.config.keymap));
             if (oldToggleWin !== window.siyuan.config.keymap.general.toggleWin.custom) {
-                ipcRenderer.send(Constants.SIYUAN_CMD, {
-                    cmd: "unregisterGlobalShortcut",
-                    accelerator: oldToggleWin
-                });
+                platform.unregisterGlobalShortcut(oldToggleWin);
             }
             sendGlobalShortcut(app);
             /// #endif
@@ -376,15 +367,9 @@ export const keymap = {
                     data: Constants.SIYUAN_KEYMAP,
                 }, () => {
                     /// #if !BROWSER
-                    ipcRenderer.send(Constants.SIYUAN_CMD, {
-                        cmd: "writeLog",
-                        msg: "user reset keymap"
-                    });
+                    platform.writeLog("user reset keymap");
                     if (window.siyuan.config.keymap.general.toggleWin.default !== window.siyuan.config.keymap.general.toggleWin.custom) {
-                        ipcRenderer.send(Constants.SIYUAN_CMD, {
-                            cmd: "unregisterGlobalShortcut",
-                            accelerator: window.siyuan.config.keymap.general.toggleWin.custom
-                        });
+                        platform.unregisterGlobalShortcut(window.siyuan.config.keymap.general.toggleWin.custom);
                     }
                     sendGlobalShortcut(app);
                     /// #endif

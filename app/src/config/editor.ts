@@ -1,6 +1,6 @@
 import {getAllModels} from "../layout/getAll";
 /// #if !BROWSER
-import {ipcRenderer} from "electron";
+import {platform} from "../platform";
 /// #endif
 import {setInlineStyle} from "../util/assets";
 import {fetchPost} from "../util/fetch";
@@ -408,9 +408,7 @@ export const editor = {
     },
     bindEvent: async () => {
         /// #if !BROWSER
-        const languages: string[] = await ipcRenderer.invoke(Constants.SIYUAN_GET, {
-            cmd: "availableSpellCheckerLanguages",
-        });
+        const languages: string[] = await platform.getSpellCheckerLanguages();
         let spellcheckLanguagesHTML = "";
         languages.forEach(item => {
             spellcheckLanguagesHTML += `<div class="fn__pointer b3-chip b3-chip--middle${window.siyuan.config.editor.spellcheckLanguages.includes(item) ? " b3-chip--current" : ""}">${item}</div>`;
@@ -421,10 +419,7 @@ export const editor = {
             const target = event.target as Element;
             if (target.classList.contains("b3-chip")) {
                 target.classList.toggle("b3-chip--current");
-                ipcRenderer.send(Constants.SIYUAN_CMD, {
-                    cmd: "setSpellCheckerLanguages",
-                    languages: Array.from(spellcheckLanguagesElement.querySelectorAll(".b3-chip--current")).map(item => item.textContent)
-                });
+                platform.setSpellCheckerLanguages(Array.from(spellcheckLanguagesElement.querySelectorAll(".b3-chip--current")).map(item => item.textContent));
                 setEditor();
             }
         });

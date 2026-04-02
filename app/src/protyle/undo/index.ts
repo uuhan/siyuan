@@ -4,7 +4,9 @@ import {Constants} from "../../constants";
 import {hideElements} from "../ui/hideElements";
 import {scrollCenter} from "../../util/highlightById";
 import {matchHotKey} from "../util/hotKey";
-import {ipcRenderer} from "electron";
+/// #if !BROWSER
+import {platform} from "../../platform";
+/// #endif
 
 interface IOperations {
     doOperations: IOperation[],
@@ -147,13 +149,13 @@ export class Undo {
 export const electronUndo = (event: KeyboardEvent) => {
     /// #if !BROWSER
     if (matchHotKey(window.siyuan.config.keymap.editor.general.undo.custom, event)) {
-        ipcRenderer.send(Constants.SIYUAN_CMD, "undo");
+        platform.undo();
         event.preventDefault();
         event.stopPropagation();
         return true;
     }
     if (matchHotKey(window.siyuan.config.keymap.editor.general.redo.custom, event)) {
-        ipcRenderer.send(Constants.SIYUAN_CMD, "redo");
+        platform.redo();
         event.preventDefault();
         event.stopPropagation();
         return true;

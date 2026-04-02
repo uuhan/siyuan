@@ -11,7 +11,7 @@ import {hideTooltip, showTooltip} from "../dialog/tooltip";
 import {isTouchDevice} from "../util/functions";
 /// #if !BROWSER
 import {openNewWindow} from "../window/openNewWindow";
-import {ipcRenderer} from "electron";
+import {platform} from "../platform";
 /// #endif
 import {layoutToJSON, saveLayout} from "./util";
 
@@ -99,7 +99,7 @@ export class Tab {
                     tabElement.style.opacity = "0.38";
                     window.siyuan.dragElement = this.headElement;
                 }
-                ipcRenderer.send(Constants.SIYUAN_SEND_WINDOWS, {cmd: "resetTabsStyle", data: "removeRegionStyle"});
+                platform.sendToAllWindows({cmd: "resetTabsStyle", data: "removeRegionStyle"});
             });
             this.headElement.addEventListener("dragend", (event: DragEvent & { target: HTMLElement }) => {
                 const tabElement = hasClosestByTag(event.target, "LI");
@@ -114,7 +114,7 @@ export class Tab {
                         openNewWindow(this);
                     }
                 }, Constants.TIMEOUT_LOAD); // 等待主进程发送关闭消息
-                ipcRenderer.send(Constants.SIYUAN_SEND_WINDOWS, {cmd: "resetTabsStyle", data: "rmDragStyle"});
+                platform.sendToAllWindows({cmd: "resetTabsStyle", data: "rmDragStyle"});
                 /// #else
                 document.querySelectorAll(".layout-tab-bars--drag").forEach(item => {
                     item.classList.remove("layout-tab-bars--drag");
@@ -137,7 +137,7 @@ export class Tab {
                         }
                     });
                 }
-                ipcRenderer.send(Constants.SIYUAN_SEND_WINDOWS, {cmd: "resetTabsStyle", data: "addRegionStyle"});
+                platform.sendToAllWindows({cmd: "resetTabsStyle", data: "addRegionStyle"});
             });
         }
 

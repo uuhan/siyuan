@@ -7,7 +7,7 @@ import {needSubscribe} from "../../util/needSubscribe";
 import {Constants} from "../../constants";
 import {getSearch, isMobile} from "../../util/functions";
 /// #if !BROWSER
-import {shell} from "electron";
+import {platform} from "../../platform";
 /// #endif
 /// #if !MOBILE
 import {openAsset, openBy} from "../../editor/util";
@@ -105,9 +105,7 @@ export class Preview {
                         /// #endif
                     } else {
                         /// #if !BROWSER
-                        shell.openExternal(linkAddress).catch((e) => {
-                            showMessage(e);
-                        });
+                        platform.openExternal(linkAddress);
                         /// #else
                         window.open(linkAddress);
                         /// #endif

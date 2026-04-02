@@ -28,7 +28,9 @@ import {insertAttrViewBlockAnimation} from "../render/av/row";
 import * as dayjs from "dayjs";
 import {setFold, zoomOut} from "../../menus/protyle";
 /// #if !BROWSER
+/// #if !TAURI
 import {webUtils} from "electron";
+/// #endif
 import {dragUpload} from "../render/av/asset";
 /// #else
 import {uploadFiles} from "../upload";
@@ -1160,7 +1162,7 @@ export const dropEvent = (protyle: IProtyle, editorElement: HTMLElement) => {
                     const files: ILocalFiles[] = [];
                     for (let i = 0; i < event.dataTransfer.files.length; i++) {
                         files.push({
-                            path: webUtils.getPathForFile(event.dataTransfer.files[i]),
+                            path: typeof webUtils !== "undefined" ? webUtils.getPathForFile(event.dataTransfer.files[i]) : event.dataTransfer.files[i].name,
                             size: event.dataTransfer.files[i].size
                         });
                     }
@@ -1177,7 +1179,7 @@ export const dropEvent = (protyle: IProtyle, editorElement: HTMLElement) => {
                         const files: ILocalFiles[] = [];
                         for (let i = 0; i < event.dataTransfer.files.length; i++) {
                             files.push({
-                                path: webUtils.getPathForFile(event.dataTransfer.files[i]),
+                                path: typeof webUtils !== "undefined" ? webUtils.getPathForFile(event.dataTransfer.files[i]) : event.dataTransfer.files[i].name,
                                 size: event.dataTransfer.files[i].size
                             });
                         }

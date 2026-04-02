@@ -23,7 +23,7 @@ import {
 } from "../protyle/util/hasClosest";
 import {Constants} from "../constants";
 /// #if !BROWSER
-import {ipcRenderer, webFrame} from "electron";
+import {platform} from "../platform";
 import {setModelsHash, setTabPosition} from "../window/setHeader";
 /// #endif
 import {Search} from "../search";
@@ -263,10 +263,10 @@ export class Wnd {
                 if (wnd instanceof Wnd) {
                     JSONToCenter(app, tabData, wnd);
                     oldTab = wnd.children[wnd.children.length - 1];
-                    ipcRenderer.send(Constants.SIYUAN_SEND_WINDOWS, {cmd: "closetab", data: tabData.id});
+                    platform.sendToAllWindows({cmd: "closetab", data: tabData.id});
                     it.querySelector("li[data-clone='true']").remove();
                     wnd.switchTab(oldTab.headElement);
-                    ipcRenderer.send(Constants.SIYUAN_CMD, "focus");
+                    platform.focus();
                 }
             }
             /// #endif
@@ -369,8 +369,8 @@ export class Wnd {
                         return true;
                     }
                 });
-                ipcRenderer.send(Constants.SIYUAN_SEND_WINDOWS, {cmd: "closetab", data: tabData.id});
-                ipcRenderer.send(Constants.SIYUAN_CMD, "focus");
+                platform.sendToAllWindows({cmd: "closetab", data: tabData.id});
+                platform.focus();
             }
             /// #endif
             if (!oldTab) {
@@ -888,8 +888,7 @@ export class Wnd {
             saveLayout();
         }
         /// #if !BROWSER
-        webFrame.clearCache();
-        ipcRenderer.send(Constants.SIYUAN_CMD, "clearCache");
+        platform.clearCache();
         setTabPosition();
         setModelsHash();
         /// #endif

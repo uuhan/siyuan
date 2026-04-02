@@ -1,6 +1,6 @@
 import {Constants} from "../constants";
 /// #if !BROWSER
-import {ipcRenderer} from "electron";
+import {platform} from "../platform";
 /// #endif
 import {processMessage} from "./processMessage";
 import {kernelError} from "../dialog/processSystem";
@@ -110,7 +110,7 @@ export const fetchPost = (
         if (url === "/api/system/exit" || url === "/api/system/setWorkspaceDir" || (
             ["/api/system/setUILayout"].includes(url) && data.errorExit // 内核中断，点关闭处理
         )) {
-            ipcRenderer.send(Constants.SIYUAN_QUIT, location.port);
+            platform.quit(location.port);
         }
         /// #endif
     });

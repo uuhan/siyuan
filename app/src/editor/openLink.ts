@@ -1,6 +1,6 @@
 import {getIdFromSYProtocol, isLocalPath, isSYProtocol, pathPosix} from "../util/pathName";
 /// #if !BROWSER
-import {shell, ipcRenderer} from "electron";
+import {platform} from "../platform";
 /// #endif
 import {getSearch} from "../util/functions";
 import {Constants} from "../constants";
@@ -79,7 +79,7 @@ export const processSYLink = (app: App, url: string) => {
                     /// #endif
                 });
                 /// #if !BROWSER
-                ipcRenderer.send(Constants.SIYUAN_CMD, "show");
+                platform.show();
                 /// #endif
             }
             app.plugins.forEach(plugin => {
@@ -155,9 +155,7 @@ export const openLink = (protyle: IProtyle, aLink: string, event?: MouseEvent, c
             linkAddress = `https://${linkAddress}`;
         }
         /// #if !BROWSER
-        shell.openExternal(linkAddress).catch((e) => {
-            showMessage(e);
-        });
+        platform.openExternal(linkAddress);
         /// #else
         openByMobile(linkAddress);
         /// #endif

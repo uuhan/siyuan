@@ -1,6 +1,6 @@
 import {Constants} from "../constants";
 /// #if !BROWSER
-import {ipcRenderer, shell} from "electron";
+import {platform} from "../platform";
 /// #endif
 import {isBrowser} from "../util/functions";
 import {fetchPost} from "../util/fetch";
@@ -343,7 +343,7 @@ ${checkUpdateHTML}
                 const url = item.getAttribute("data-url");
                 /// #if !BROWSER
                 if (url.startsWith("http")) {
-                    shell.openExternal(url);
+                    platform.openExternal(url);
                 } else {
                     useShell("openPath", url);
                 }
@@ -517,10 +517,7 @@ ${checkUpdateHTML}
             const autoLaunchMode = parseInt(autoLaunchElement.value);
             fetchPost("/api/system/setAutoLaunch", {autoLaunch: autoLaunchMode}, () => {
                 window.siyuan.config.system.autoLaunch2 = autoLaunchMode;
-                ipcRenderer.send(Constants.SIYUAN_AUTO_LAUNCH, {
-                    openAtLogin: 0 !== autoLaunchMode,
-                    openAsHidden: 2 === autoLaunchMode
-                });
+                platform.setAutoLaunch(0 !== autoLaunchMode, 2 === autoLaunchMode);
             });
         });
         /// #endif
@@ -533,10 +530,7 @@ ${checkUpdateHTML}
                 window.siyuan.config.system.networkProxy.host = host;
                 window.siyuan.config.system.networkProxy.port = port;
                 /// #if !BROWSER
-                ipcRenderer.invoke(Constants.SIYUAN_GET, {
-                    cmd: "setProxy",
-                    proxyURL: `${window.siyuan.config.system.networkProxy.scheme}://${window.siyuan.config.system.networkProxy.host}:${window.siyuan.config.system.networkProxy.port}`,
-                }).then(() => {
+                platform.setProxy(`${window.siyuan.config.system.networkProxy.scheme}://${window.siyuan.config.system.networkProxy.host}:${window.siyuan.config.system.networkProxy.port}`).then(() => {
                     exportLayout({
                         errorExit: false,
                         cb() {

@@ -1,6 +1,6 @@
 import {MenuItem} from "./Menu";
 /// #if !BROWSER
-import {ipcRenderer} from "electron";
+import {platform} from "../platform";
 /// #endif
 import {openHistory} from "../history/history";
 import {getOpenNotebookCount, originalPath, pathPosix, useShell} from "../util/pathName";
@@ -196,8 +196,7 @@ export const workspaceMenu = (app: App, rect: DOMRect) => {
                 label: `${window.siyuan.languages.new} / ${window.siyuan.languages.openBy}`,
                 iconHTML: "",
                 click: async () => {
-                    const localPath = await ipcRenderer.invoke(Constants.SIYUAN_GET, {
-                        cmd: "showOpenDialog",
+                    const localPath = await platform.showOpenDialog({
                         defaultPath: window.siyuan.config.system.homeDir,
                         properties: ["openDirectory", "createDirectory"],
                     });
@@ -569,7 +568,7 @@ export const workspaceMenu = (app: App, rect: DOMRect) => {
             label: window.siyuan.languages.debug,
             icon: "iconBug",
             click: () => {
-                ipcRenderer.send(Constants.SIYUAN_CMD, "openDevTools");
+                platform.openDevTools();
             }
         }).element);
         /// #endif
@@ -600,10 +599,7 @@ const openWorkspace = (workspace: string) => {
     fetchPost("/api/system/setWorkspaceDir", {
         path: workspace
     }, () => {
-        ipcRenderer.send(Constants.SIYUAN_OPEN_WORKSPACE, {
-            workspace,
-            lang: window.siyuan.config.appearance.lang
-        });
+        platform.openWorkspace(workspace);
     });
     /// #endif
 };

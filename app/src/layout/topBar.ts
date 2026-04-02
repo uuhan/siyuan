@@ -14,7 +14,7 @@ import {openSetting} from "../config";
 import {openSearch} from "../search/spread";
 import {App} from "../index";
 /// #if !BROWSER
-import {ipcRenderer, webFrame} from "electron";
+import {platform} from "../platform";
 /// #endif
 import {Constants} from "../constants";
 import {isBrowser, isWindow} from "../util/functions";
@@ -286,12 +286,8 @@ export const setZoom = (type: "zoomIn" | "zoomOut" | "restore") => {
         });
     }
 
-    webFrame.setZoomFactor(zoom);
-    ipcRenderer.send(Constants.SIYUAN_CMD, {
-        cmd: "setTrafficLightPosition",
-        zoom,
-        position: Constants.SIZE_ZOOM.find((item) => item.zoom === zoom).position
-    });
+    platform.setZoomFactor(zoom);
+    platform.setTrafficLightPosition(zoom, Constants.SIZE_ZOOM.find((item) => item.zoom === zoom).position);
     window.siyuan.storage[Constants.LOCAL_ZOOM] = zoom;
     setStorageVal(Constants.LOCAL_ZOOM, zoom);
     if (!isWindow()) {

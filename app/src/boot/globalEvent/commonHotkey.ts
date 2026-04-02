@@ -2,7 +2,7 @@ import {Constants} from "../../constants";
 import {fetchPost} from "../../util/fetch";
 /// #if !BROWSER
 import {sendGlobalShortcut} from "./keydown";
-import {ipcRenderer} from "electron";
+import {platform} from "../../platform";
 /// #endif
 import {App} from "../../index";
 import {isMac, isNotCtrl, isOnlyMeta} from "../../protyle/util/compatibility";
@@ -12,10 +12,7 @@ const matchKeymap = (keymap: Config.IKeys, key1: "general" | "editor", key2?: "g
     if (key1 === "general") {
         if (!window.siyuan.config.keymap[key1]) {
             /// #if !BROWSER
-            ipcRenderer.send(Constants.SIYUAN_CMD, {
-                cmd: "writeLog",
-                msg: "window.siyuan.config.keymap.general is not found"
-            });
+            platform.writeLog("window.siyuan.config.keymap.general is not found");
             /// #endif
             window.siyuan.config.keymap[key1] = keymap as Config.IKeymapGeneral;
             return false;
@@ -23,20 +20,14 @@ const matchKeymap = (keymap: Config.IKeys, key1: "general" | "editor", key2?: "g
     } else {
         if (!window.siyuan.config.keymap[key1]) {
             /// #if !BROWSER
-            ipcRenderer.send(Constants.SIYUAN_CMD, {
-                cmd: "writeLog",
-                msg: "window.siyuan.config.keymap.editor is not found"
-            });
+            platform.writeLog("window.siyuan.config.keymap.editor is not found");
             /// #endif
             window.siyuan.config.keymap[key1] = JSON.parse(JSON.stringify(Constants.SIYUAN_KEYMAP.editor));
             return false;
         }
         if (!window.siyuan.config.keymap[key1][key2]) {
             /// #if !BROWSER
-            ipcRenderer.send(Constants.SIYUAN_CMD, {
-                cmd: "writeLog",
-                msg: `window.siyuan.config.keymap.editor.${key2} is not found`
-            });
+            platform.writeLog(`window.siyuan.config.keymap.editor.${key2} is not found`);
             /// #endif
             (window.siyuan.config.keymap[key1][key2] as Config.IKeymapEditor[typeof key2]) = keymap as Config.IKeymapEditor[typeof key2];
             return false;
@@ -47,10 +38,7 @@ const matchKeymap = (keymap: Config.IKeys, key1: "general" | "editor", key2?: "g
         if (key1 === "general") {
             if (!window.siyuan.config.keymap[key1][key] || window.siyuan.config.keymap[key1][key].default !== keymap[key].default) {
                 /// #if !BROWSER
-                ipcRenderer.send(Constants.SIYUAN_CMD, {
-                    cmd: "writeLog",
-                    msg: `window.siyuan.config.keymap.${key1}.${key} is not found or match: ${window.siyuan.config.keymap[key1][key]?.default}`
-                });
+                platform.writeLog(`window.siyuan.config.keymap.${key1}.${key} is not found or match: ${window.siyuan.config.keymap[key1][key]?.default}`);
                 /// #endif
                 match = false;
                 window.siyuan.config.keymap[key1][key] = keymap[key];
@@ -58,10 +46,7 @@ const matchKeymap = (keymap: Config.IKeys, key1: "general" | "editor", key2?: "g
         } else {
             if (!window.siyuan.config.keymap[key1][key2][key] || window.siyuan.config.keymap[key1][key2][key].default !== keymap[key].default) {
                 /// #if !BROWSER
-                ipcRenderer.send(Constants.SIYUAN_CMD, {
-                    cmd: "writeLog",
-                    msg: `window.siyuan.config.keymap.${key1}.${key2}.${key} is not found or match: ${window.siyuan.config.keymap[key1][key2][key]?.default}`
-                });
+                platform.writeLog(`window.siyuan.config.keymap.${key1}.${key2}.${key} is not found or match: ${window.siyuan.config.keymap[key1][key2][key]?.default}`);
                 /// #endif
                 match = false;
                 window.siyuan.config.keymap[key1][key2][key] = keymap[key];
@@ -113,10 +98,7 @@ export const correctHotkey = (app: App) => {
         (!matchKeymap1 || !matchKeymap2 || !matchKeymap3 || !matchKeymap4 || !matchKeymap5 || !matchKeymap6 ||
             !hasKeymap1 || !hasKeymap2 || !hasKeymap3 || !hasKeymap4 || !hasKeymap5 || !hasKeymap6)) {
         /// #if !BROWSER
-        ipcRenderer.send(Constants.SIYUAN_CMD, {
-            cmd: "writeLog",
-            msg: "update keymap"
-        });
+        platform.writeLog("update keymap");
         /// #endif
         fetchPost("/api/setting/setKeymap", {
             data: window.siyuan.config.keymap
