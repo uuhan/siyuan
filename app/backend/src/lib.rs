@@ -1,5 +1,6 @@
 mod commands;
 mod kernel;
+mod tray;
 
 use tauri::Manager;
 
@@ -14,6 +15,8 @@ pub fn run() {
             commands::get_kernel_port,
         ])
         .setup(|app| {
+            tray::setup_tray(app.handle())?;
+
             let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 match kernel::boot_kernel(&app_handle).await {
