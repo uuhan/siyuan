@@ -1,0 +1,173 @@
+name: CD For SiYuan (Tauri)
+
+on:
+  push:
+    tags:
+      - '*-tauri*'
+  workflow_dispatch:
+
+env:
+  package_json: "app/package.json"
+
+jobs:
+  build:
+    runs-on: ${{ matrix.config.os }}
+    name: Tauri ${{ matrix.config.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - os: ubuntu-24.04
+            name: linux-amd64
+            goos: linux
+            goarch: amd64
+            rust_target: x86_64-unknown-linux-gnu
+            go_build_flags: "-s -w"
+            bundle_ext: "deb,appimage"
+
+          - os: macos-latest
+            name: macos-arm64
+            goos: darwin
+            goarch: arm64
+            rust_target: aarch64-apple-darwin
+            go_build_flags: "-s -w"
+            bundle_ext: "dmg"
+
+          - os: macos-13
+            name: macos-amd64
+            goos: darwin
+            goarch: amd64
+            rust_target: x86_64-apple-darwin
+            go_build_flags: "-s -w"
+            bundle_ext: "dmg"
+
+          - os: windows-latest
+            name: windows-amd64
+            goos: windows
+            goarch: amd64
+            rust_target: x86_64-pc-windows-msvc
+            go_build_flags: "-s -w -H=windowsgui"
+            kernel_ext: ".exe"
+            bundle_ext: "msi"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        shell: bash
+        run: |
+          version=$(jq -r .version "$package_json")
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+        env:
+          package_json: ${{ env.package_json }}
+
+      - name: Extract packageManager
+        id: pkg_manager
+        shell: bash
+        run: |
+          pm=$(jq -r .packageManager "$package_json")
+          echo "value=$pm" >> "$GITHUB_OUTPUT"
+        env:
+          package_json: ${{ env.package_json }}
+
+      # --- System dependencies ---
+
+      - name: Install Linux dependencies
+        if: matrix.config.goos == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Set up MingW (Windows)
+        if: matrix.config.goos == 'windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          install: p7zip mingw-w64-x86_64-lua
+
+      # --- Toolchains ---
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: kernel/go.mod
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.config.rust_target }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri -> target
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        shell: bash
+        run: npm install -g "$PM"
+        env:
+          PM: ${{ steps.pkg_manager.outputs.value }}
+
+      # --- Build Go Kernel ---
+
+      - name: Build kernel
+        working-directory: kernel
+        shell: bash
+        run: |
+          go build -tags fts5 -v \
+            -ldflags "${GO_BUILD_FLAGS} -X github.com/${GITHUB_REPOSITORY}/kernel/util.Mode=prod" \
+            -o "../app/src-tauri/binaries/SiYuan-Kernel-${RUST_TARGET}${KERNEL_EXT}"
+        env:
+          GO111MODULE: "on"
+          CGO_ENABLED: "1"
+          GOOS: ${{ matrix.config.goos }}
+          GOARCH: ${{ matrix.config.goarch }}
+          GO_BUILD_FLAGS: ${{ matrix.config.go_build_flags }}
+          RUST_TARGET: ${{ matrix.config.rust_target }}
+          KERNEL_EXT: ${{ matrix.config.kernel_ext }}
+
+      # --- Build Frontend ---
+
+      - name: Install Node dependencies
+        working-directory: app
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build frontend (Tauri)
+        working-directory: app
+        run: pnpm build:tauri
+
+      # --- Build Tauri App ---
+
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version "^2"
+
+      - name: Build Tauri bundle
+        working-directory: app/src-tauri
+        shell: bash
+        run: cargo tauri build --target "$RUST_TARGET" --bundles "$BUNDLE_EXT"
+        env:
+          RUST_TARGET: ${{ matrix.config.rust_target }}
+          BUNDLE_EXT: ${{ matrix.config.bundle_ext }}
+
+      # --- Upload artifacts ---
+
+      - name: Upload bundle artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: siyuan-tauri-${{ steps.version.outputs.value }}-${{ matrix.config.name }}
+          path: |
+            app/src-tauri/target/${{ matrix.config.rust_target }}/release/bundle/**/*.dmg
+            app/src-tauri/target/${{ matrix.config.rust_target }}/release/bundle/**/*.AppImage
+            app/src-tauri/target/${{ matrix.config.rust_target }}/release/bundle/**/*.deb
+            app/src-tauri/target/${{ matrix.config.rust_target }}/release/bundle/**/*.msi
+          if-no-files-found: error
