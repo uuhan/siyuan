@@ -7,7 +7,7 @@ import {focusByRange} from "../protyle/util/selection";
 import {unicode2Emoji} from "../emoji";
 import {Constants} from "../constants";
 /// #if !BROWSER
-import {ipcRenderer} from "electron";
+import {platform} from "../platform";
 /// #endif
 /// #if !MOBILE
 /// #endif
@@ -19,10 +19,11 @@ import {hasClosestByClassName} from "../protyle/util/hasClosest";
 
 export const useShell = (cmd: "showItemInFolder" | "openPath", filePath: string) => {
     /// #if !BROWSER
-    ipcRenderer.send(Constants.SIYUAN_CMD, {
-        cmd,
-        filePath: filePath
-    });
+    if (cmd === "showItemInFolder") {
+        platform.showItemInFolder(filePath);
+    } else {
+        platform.openPath(filePath);
+    }
     /// #endif
 };
 

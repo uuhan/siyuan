@@ -1,6 +1,6 @@
 import {layoutToJSON} from "../layout/util";
 /// #if !BROWSER
-import {ipcRenderer} from "electron";
+import {platform} from "../platform";
 /// #endif
 import {Constants} from "../constants";
 import {Tab} from "../layout/Tab";
@@ -23,7 +23,7 @@ export const openNewWindow = (tab: Tab, options: windowOptions = {}) => {
     const json = {};
     layoutToJSON(tab, json);
     /// #if !BROWSER
-    ipcRenderer.send(Constants.SIYUAN_OPEN_WINDOW, {
+    platform.openNewWindow({
         position: options.position,
         width: options.width,
         height: options.height,
@@ -65,7 +65,7 @@ export const openNewWindowById = async (id: string | string[], options: windowOp
         });
     }
     /// #if !BROWSER
-    ipcRenderer.send(Constants.SIYUAN_OPEN_WINDOW, {
+    platform.openNewWindow({
         position: options.position,
         width: options.width,
         height: options.height,
@@ -100,7 +100,7 @@ export const openAssetNewWindow = (assetPath: string, options: windowOptions = {
                 instance: "Asset",
             }
         }];
-        ipcRenderer.send(Constants.SIYUAN_OPEN_WINDOW, {
+        platform.openNewWindow({
             position: options.position,
             width: options.width,
             height: options.height,

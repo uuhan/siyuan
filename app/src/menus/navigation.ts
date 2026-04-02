@@ -1,6 +1,6 @@
 import {copySubMenu, exportMd, movePathToMenu, openFileAttr, renameMenu,} from "./commonMenuItem";
 /// #if !BROWSER
-import {FileFilter, ipcRenderer} from "electron";
+import {platform} from "../platform";
 import * as path from "path";
 /// #endif
 import {MenuItem} from "./Menu";
@@ -737,12 +737,11 @@ export const genImportMenu = (notebookId: string, pathString: string) => {
             icon: isDoc ? "iconMarkdown" : "iconFolder",
             label,
             click: async () => {
-                let filters: FileFilter[] = [];
+                let filters: any[] = [];
                 if (isDoc) {
                     filters = [{name: "Markdown", extensions: ["md", "markdown"]}];
                 }
-                const localPath = await ipcRenderer.invoke(Constants.SIYUAN_GET, {
-                    cmd: "showOpenDialog",
+                const localPath = await platform.showOpenDialog({
                     defaultPath: window.siyuan.config.system.homeDir,
                     filters,
                     properties: [isDoc ? "openFile" : "openDirectory"],

@@ -1,5 +1,5 @@
 /// #if !BROWSER
-import {shell} from "electron";
+import {platform} from "../platform";
 /// #endif
 import {confirmDialog} from "../dialog/confirmDialog";
 import {getSearch, isMobile, isValidCustomAttrName} from "../util/functions";
@@ -938,9 +938,7 @@ export const openMenu = (app: App, src: string, onlyMenu: boolean, showAccelerat
             label: window.siyuan.languages.useDefault,
             accelerator: showAccelerator ? window.siyuan.languages.click : "",
             click: () => {
-                shell.openExternal(src).catch((e) => {
-                    showMessage(e);
-                });
+                platform.openExternal(src);
             }
         });
         /// #else

@@ -1,0 +1,30 @@
+[package]
+name = "siyuan"
+version = "3.6.2"
+description = "SiYuan - Refactor your thinking"
+authors = ["SiYuan Contributors"]
+edition = "2021"
+
+[lib]
+name = "siyuan_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["macos-private-api"] }
+tauri-plugin-shell = "2"
+tauri-plugin-process = "2"
+tauri-plugin-os = "2"
+tauri-plugin-fs = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.12", features = ["json"] }
+tokio = { version = "1", features = ["net", "time"] }
+dirs = "6"
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1

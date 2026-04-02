@@ -1,10 +1,13 @@
 import {hideMessage, showMessage} from "../../dialog/message";
 import {Constants} from "../../constants";
 /// #if !BROWSER
+/// #if !TAURI
 import {ipcRenderer} from "electron";
 import * as fs from "fs";
 import * as path from "path";
 import {afterExport} from "./util";
+/// #endif
+import {platform} from "../../platform";
 /// #endif
 import {confirmDialog} from "../../dialog/confirmDialog";
 import {getThemeMode, setInlineStyle} from "../../util/assets";
@@ -147,9 +150,7 @@ const renderPDF = async (id: string) => {
     if (!isDefault) {
         themeStyle = `<link rel="stylesheet" type="text/css" id="themeStyle" href="${servePath}appearance/themes/${window.siyuan.config.appearance.themeLight}/theme.css?${Constants.SIYUAN_VERSION}"/>`;
     }
-    const currentWindowId = await ipcRenderer.invoke(Constants.SIYUAN_GET, {
-        cmd: "getContentsId",
-    });
+    const currentWindowId = await platform.getContentsId();
     // data-theme-mode="light" https://github.com/siyuan-note/siyuan/issues/7379
     const html = `<!DOCTYPE html>
 <html lang="${window.siyuan.config.appearance.lang}" data-theme-mode="light" data-light-theme="${window.siyuan.config.appearance.themeLight}" data-dark-theme="${window.siyuan.config.appearance.themeDark}">
@@ -683,7 +684,7 @@ ${getIconScript(servePath)}
 ${getSnippetJS()}
 </body></html>`;
     fetchPost("/api/export/exportTempContent", {content: html}, (response) => {
-        ipcRenderer.send(Constants.SIYUAN_EXPORT_NEWWINDOW, response.data.url);
+        platform.openNewWindow({url: response.data.url});
     });
 };
 
@@ -708,8 +709,7 @@ const getExportPath = (option: IExportOptions, removeAssets?: boolean, mergeSubd
                 break;
         }
 
-        const result = await ipcRenderer.invoke(Constants.SIYUAN_GET, {
-            cmd: "showOpenDialog",
+        const result = await platform.showOpenDialog({
             title: window.siyuan.languages.export + " " + exportType,
             properties: ["createDirectory", "openDirectory"],
         });

@@ -2,7 +2,7 @@ import {focusByRange} from "./selection";
 import {fetchPost, fetchSyncPost} from "../../util/fetch";
 import {Constants} from "../../constants";
 /// #if !BROWSER
-import {ipcRenderer} from "electron";
+import {platform} from "../../platform";
 /// #endif
 /// #if MOBILE
 import {processSYLink} from "../../editor/openLink";
@@ -133,10 +133,7 @@ export const getLocalFiles = async () => {
     // 不再支持 PC 浏览器 https://github.com/siyuan-note/siyuan/issues/7206
     let localFiles: ILocalFiles[] = [];
     if ("darwin" === window.siyuan.config.system.os) {
-        const xmlString = await ipcRenderer.invoke(Constants.SIYUAN_GET, {
-            cmd: "clipboardRead",
-            format: "NSFilenamesPboardType",
-        });
+        const xmlString = await platform.clipboardRead("NSFilenamesPboardType");
         if (xmlString) {
             const domParser = new DOMParser();
             const xmlDom = domParser.parseFromString(xmlString, "application/xml");
@@ -582,12 +579,17 @@ export const setStorageVal = (key: string, val: any, cb?: () => void) => {
 
 /// #if !BROWSER
 export const initNativeDialogOverride = () => {
+    /// #if TAURI
+    // Tauri: native WebView alert/confirm work fine, no override needed
+    return;
+    /// #endif
     const originalAlert = window.alert;
     const originalConfirm = window.confirm;
 
     window.alert = function (message: string) {
         try {
-            ipcRenderer.sendSync(Constants.SIYUAN_ALERT_DIALOG, {
+            const {ipcRenderer: ipc} = require("electron");
+            ipc.sendSync(Constants.SIYUAN_ALERT_DIALOG, {
                 title: window.siyuan.languages.siyuanNote,
                 message,
                 buttons: [window.siyuan.languages.confirm],
@@ -601,7 +603,8 @@ export const initNativeDialogOverride = () => {
 
     window.confirm = function (message: string): boolean {
         try {
-            const buttonIndex = ipcRenderer.sendSync(Constants.SIYUAN_CONFIRM_DIALOG, {
+            const {ipcRenderer: ipc2} = require("electron");
+            const buttonIndex = ipc2.sendSync(Constants.SIYUAN_CONFIRM_DIALOG, {
                 title: window.siyuan?.languages?.siyuanNote || "SiYuan",
                 message,
                 buttons: [window.siyuan?.languages?.cancel || "Cancel", window.siyuan?.languages?.confirm || "OK"],

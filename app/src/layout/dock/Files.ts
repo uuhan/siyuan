@@ -29,7 +29,7 @@ import {isTouchDevice} from "../../util/functions";
 import {App} from "../../index";
 import {refreshFileTree} from "../../dialog/processSystem";
 /// #if !BROWSER
-import {ipcRenderer} from "electron";
+import {platform} from "../../platform";
 /// #endif
 import {hideTooltip, showTooltip} from "../../dialog/tooltip";
 import {selectOpenTab} from "./util";
@@ -504,7 +504,7 @@ export class Files extends Model {
             });
             window.siyuan.dragElement = undefined;
             /// #if !BROWSER
-            ipcRenderer.send(Constants.SIYUAN_SEND_WINDOWS, {cmd: "resetTabsStyle", data: "rmDragStyle"});
+            platform.sendToAllWindows({cmd: "resetTabsStyle", data: "rmDragStyle"});
             /// #else
             document.querySelectorAll(".layout-tab-bars--drag").forEach(item => {
                 item.classList.remove("layout-tab-bars--drag");

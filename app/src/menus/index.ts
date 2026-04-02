@@ -7,7 +7,7 @@ import {initFileMenu, initNavigationMenu} from "./navigation";
 import {initTabMenu} from "./tab";
 /// #endif
 /// #if !BROWSER
-import {ipcRenderer} from "electron";
+import {platform} from "../platform";
 /// #endif
 import {Menu} from "./Menu";
 import {hasClosestByClassName, hasTopClosestByTag} from "../protyle/util/hasClosest";
@@ -35,7 +35,7 @@ export class Menus {
             }
             if (target.classList.contains("b3-text-field") || (target.tagName === "INPUT" && (target as HTMLInputElement).type === "text")) {
                 /// #if !BROWSER
-                ipcRenderer.send(Constants.SIYUAN_CONTEXT_MENU, {
+                platform.showContextMenu({
                     undo: window.siyuan.languages.undo,
                     redo: window.siyuan.languages.redo,
                     copy: window.siyuan.languages.copy,

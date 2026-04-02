@@ -4,7 +4,7 @@ import {hasClosestByClassName} from "../protyle/util/hasClosest";
 import {fetchPost} from "../util/fetch";
 import {mountHelp} from "../util/mount";
 /// #if !BROWSER
-import {ipcRenderer} from "electron";
+import {platform} from "../platform";
 /// #endif
 /// #endif
 import {MenuItem} from "../menus/Menu";
@@ -88,7 +88,7 @@ export const initStatus = (isWindow = false) => {
                     label: window.siyuan.languages.debug,
                     icon: "iconBug",
                     click: () => {
-                        ipcRenderer.send(Constants.SIYUAN_CMD, "openDevTools");
+                        platform.openDevTools();
                     }
                 }).element);
                 /// #endif

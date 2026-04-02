@@ -2,10 +2,12 @@ import {adjustLayout, exportLayout, JSONToLayout, resetLayout, resizeTopBar} fro
 import {resizeTabs} from "../layout/tabUtil";
 import {setStorageVal} from "../protyle/util/compatibility";
 /// #if !BROWSER
-import {ipcRenderer, webFrame} from "electron";
+import {platform} from "../platform";
+/// #if !TAURI
 import * as fs from "fs";
 import * as path from "path";
 import {afterExport} from "../protyle/export/util";
+/// #endif
 import {onWindowsMsg} from "../window/onWindowsMsg";
 import {initNativeDialogOverride} from "../protyle/util/compatibility";
 /// #endif
@@ -35,17 +37,16 @@ import {getAllEditor} from "../layout/getAll";
 export const onGetConfig = (isStart: boolean, app: App) => {
     correctHotkey(app);
     /// #if !BROWSER
-    ipcRenderer.invoke(Constants.SIYUAN_INIT, {
+    platform.init({
         languages: window.siyuan.languages["_trayMenu"],
         workspaceDir: window.siyuan.config.system.workspaceDir,
         port: location.port
     });
-    webFrame.setZoomFactor(window.siyuan.storage[Constants.LOCAL_ZOOM]);
-    ipcRenderer.send(Constants.SIYUAN_CMD, {
-        cmd: "setTrafficLightPosition",
-        zoom: window.siyuan.storage[Constants.LOCAL_ZOOM],
-        position: Constants.SIZE_ZOOM.find((item) => item.zoom === window.siyuan.storage[Constants.LOCAL_ZOOM]).position
-    });
+    platform.setZoomFactor(window.siyuan.storage[Constants.LOCAL_ZOOM]);
+    platform.setTrafficLightPosition(
+        window.siyuan.storage[Constants.LOCAL_ZOOM],
+        Constants.SIZE_ZOOM.find((item) => item.zoom === window.siyuan.storage[Constants.LOCAL_ZOOM]).position
+    );
     /// #endif
     if (!window.siyuan.config.uiLayout || (window.siyuan.config.uiLayout && !window.siyuan.config.uiLayout.left)) {
         window.siyuan.config.uiLayout = Constants.SIYUAN_EMPTY_LAYOUT;
@@ -104,21 +105,16 @@ export const onGetConfig = (isStart: boolean, app: App) => {
 
 export const initWindow = async (app: App) => {
     /// #if !BROWSER
-    ipcRenderer.send(Constants.SIYUAN_CMD, {
-        cmd: "setSpellCheckerLanguages",
-        languages: window.siyuan.config.editor.spellcheckLanguages
-    });
+    platform.setSpellCheckerLanguages(window.siyuan.config.editor.spellcheckLanguages);
     const winOnClose = (close = false) => {
         exportLayout({
             cb() {
                 if (window.siyuan.config.appearance.closeButtonBehavior === 1 && !close) {
                     // 最小化
                     if ("windows" === window.siyuan.config.system.os) {
-                        ipcRenderer.send(Constants.SIYUAN_CONFIG_TRAY, {
-                            languages: window.siyuan.languages["_trayMenu"],
-                        });
+                        platform.configTray(window.siyuan.languages["_trayMenu"]);
                     } else {
-                        ipcRenderer.send(Constants.SIYUAN_CMD, "closeButtonBehavior");
+                        platform.closeButtonBehavior();
                     }
                 } else {
                     exitSiYuan();
@@ -128,8 +124,7 @@ export const initWindow = async (app: App) => {
         });
     };
 
-    ipcRenderer.send(Constants.SIYUAN_EVENT);
-    ipcRenderer.on(Constants.SIYUAN_EVENT, (event, cmd) => {
+    platform.onWindowEvent((cmd) => {
         if (cmd === "focus") {
             // 由于 https://github.com/siyuan-note/siyuan/issues/10060 和新版 electron 应用切出再切进会保持光标，故移除 focus
             window.siyuan.altIsPressed = false;
@@ -159,27 +154,27 @@ export const initWindow = async (app: App) => {
         }
     });
     if (!isWindow()) {
-        ipcRenderer.on(Constants.SIYUAN_OPEN_URL, (event, url) => {
+        platform.onOpenUrl((url) => {
             processSYLink(app, url);
         });
     }
-    ipcRenderer.on(Constants.SIYUAN_OPEN_FILE, (event, data) => {
+    platform.onOpenFile((data) => {
         if (!data.app) {
             data.app = app;
         }
         openFile(data);
     });
-    ipcRenderer.on(Constants.SIYUAN_SAVE_CLOSE, (event, close) => {
+    platform.onSaveClose((close) => {
         if (isWindow()) {
             closeWindow(app);
         } else {
             winOnClose(close);
         }
     });
-    ipcRenderer.on(Constants.SIYUAN_SEND_WINDOWS, (e, ipcData: IWebSocketData) => {
+    platform.onSendWindows((ipcData: IWebSocketData) => {
         onWindowsMsg(ipcData, app);
     });
-    ipcRenderer.on(Constants.SIYUAN_HOTKEY, (e, data) => {
+    platform.onGlobalHotkey((data) => {
         let matchCommand = false;
         app.plugins.find(item => {
             item.commands.find(command => {
@@ -194,7 +189,8 @@ export const initWindow = async (app: App) => {
             }
         });
     });
-    ipcRenderer.on(Constants.SIYUAN_EXPORT_PDF, async (e, ipcData) => {
+    /// #if !TAURI
+    platform.onExportPdf(async (ipcData) => {
         const msgId = showMessage(window.siyuan.languages.exporting, -1);
         window.siyuan.storage[Constants.LOCAL_EXPORTPDF] = {
             removeAssets: ipcData.removeAssets,
@@ -221,7 +217,8 @@ export const initWindow = async (app: App) => {
 ${response.data.replace("%pages", "<span class=totalPages></span>").replace("%page", "<span class=pageNumber></span>")}
 </div>`;
             }
-            const pdfData = await ipcRenderer.invoke(Constants.SIYUAN_GET, {
+            const {ipcRenderer: ipc} = require("electron");
+            const pdfData = await ipc.invoke(Constants.SIYUAN_GET, {
                 cmd: "printToPDF",
                 pdfOptions: ipcData.pdfOptions,
                 webContentsId: ipcData.webContentsId
@@ -238,7 +235,7 @@ ${response.data.replace("%pages", "<span class=totalPages></span>").replace("%pa
                 savePath,
             }, () => {
                 fs.writeFileSync(pdfFilePath, pdfData);
-                ipcRenderer.send(Constants.SIYUAN_CMD, {cmd: "destroy", webContentsId: ipcData.webContentsId});
+                ipc.send(Constants.SIYUAN_CMD, {cmd: "destroy", webContentsId: ipcData.webContentsId});
                 fetchPost("/api/export/processPDF", {
                     id: ipcData.rootId,
                     merge: ipcData.mergeSubdocs,
@@ -280,15 +277,14 @@ ${response.data.replace("%pages", "<span class=totalPages></span>").replace("%pa
         } catch (e) {
             console.error(e);
             showMessage(window.siyuan.languages.exportPDFLowMemory, 0, "error", msgId);
-            ipcRenderer.send(Constants.SIYUAN_CMD, {cmd: "destroy", webContentsId: ipcData.webContentsId});
+            ipc.send(Constants.SIYUAN_CMD, {cmd: "destroy", webContentsId: ipcData.webContentsId});
         }
-        ipcRenderer.send(Constants.SIYUAN_CMD, {cmd: "hide", webContentsId: ipcData.webContentsId});
+        ipc.send(Constants.SIYUAN_CMD, {cmd: "hide", webContentsId: ipcData.webContentsId});
     });
+    /// #endif
 
     if (isWindow()) {
-        const isAlwaysOnTop = await ipcRenderer.invoke(Constants.SIYUAN_GET, {
-            cmd: "isAlwaysOnTop",
-        });
+        const isAlwaysOnTop = await platform.isAlwaysOnTop();
         document.body.insertAdjacentHTML("beforeend", `<div class="toolbar__window">
 <div class="toolbar__item ariaLabel" aria-label="${window.siyuan.languages[isAlwaysOnTop ? "unpin" : "pin"]}" id="pinWindow">
     <svg>
@@ -300,24 +296,20 @@ ${response.data.replace("%pages", "<span class=totalPages></span>").replace("%pa
             if (pinElement.getAttribute("aria-label") === window.siyuan.languages.pin) {
                 pinElement.querySelector("use").setAttribute("xlink:href", "#iconUnpin");
                 pinElement.setAttribute("aria-label", window.siyuan.languages.unpin);
-                ipcRenderer.send(Constants.SIYUAN_CMD, "setAlwaysOnTopTrue");
+                platform.setAlwaysOnTop(true);
             } else {
                 pinElement.querySelector("use").setAttribute("xlink:href", "#iconPin");
                 pinElement.setAttribute("aria-label", window.siyuan.languages.pin);
-                ipcRenderer.send(Constants.SIYUAN_CMD, "setAlwaysOnTopFalse");
+                platform.setAlwaysOnTop(false);
             }
         });
     }
 
-    const isFullScreen = await ipcRenderer.invoke(Constants.SIYUAN_GET, {
-        cmd: "isFullScreen",
-    });
+    const isFullScreen = await platform.isFullScreen();
     if (isFullScreen) {
         document.body.classList.add("body--fullscreen");
     }
-    const isMaximized = await ipcRenderer.invoke(Constants.SIYUAN_GET, {
-        cmd: "isMaximized",
-    });
+    const isMaximized = await platform.isMaximized();
     if (isMaximized) {
         document.body.classList.add("body--maximize");
     }
@@ -355,10 +347,10 @@ ${response.data.replace("%pages", "<span class=totalPages></span>").replace("%pa
         const restoreBtnElement = document.getElementById("restoreWindow");
 
         restoreBtnElement.addEventListener("click", () => {
-            ipcRenderer.send(Constants.SIYUAN_CMD, "restore");
+            platform.restore();
         });
         maxBtnElement.addEventListener("click", () => {
-            ipcRenderer.send(Constants.SIYUAN_CMD, "maximize");
+            platform.maximize();
         });
 
         const minBtnElement = document.getElementById("minWindow");
@@ -367,7 +359,7 @@ ${response.data.replace("%pages", "<span class=totalPages></span>").replace("%pa
             if (minBtnElement.classList.contains("window-controls__item--disabled")) {
                 return;
             }
-            ipcRenderer.send(Constants.SIYUAN_CMD, "minimize");
+            platform.minimize();
         });
         closeBtnElement.addEventListener("click", () => {
             if (isWindow()) {

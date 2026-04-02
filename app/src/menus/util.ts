@@ -1,5 +1,5 @@
 /// #if !BROWSER
-import {ipcRenderer} from "electron";
+import {platform} from "../platform";
 import * as path from "path";
 /// #endif
 import {fetchPost} from "../util/fetch";
@@ -22,8 +22,7 @@ export const exportAsset = (src: string) => {
             /// #if BROWSER
             exportByMobile(src);
             /// #else
-            const result = await ipcRenderer.invoke(Constants.SIYUAN_GET, {
-                cmd: "showSaveDialog",
+            const result = await platform.showSaveDialog({
                 defaultPath: getAssetName(src) + pathPosix().extname(src),
                 properties: ["showOverwriteConfirmation"],
             });

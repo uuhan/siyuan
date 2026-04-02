@@ -29,7 +29,7 @@ import {openSetting} from "../../../config";
 import {Tab} from "../../../layout/Tab";
 /// #endif
 /// #if !BROWSER
-import {ipcRenderer} from "electron";
+import {platform} from "../../../platform";
 /// #endif
 import {App} from "../../../index";
 import {Constants} from "../../../constants";
@@ -241,8 +241,8 @@ export const globalCommand = (command: string, app: App) => {
             return true;
         case "toggleWin":
             /// #if !BROWSER
-            ipcRenderer.send(Constants.SIYUAN_CMD, "hide");
-            ipcRenderer.send(Constants.SIYUAN_CMD, "minimize");
+            platform.hide();
+            platform.minimize();
             /// #endif
             return true;
     }

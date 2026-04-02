@@ -48,7 +48,7 @@ import {
 import {transaction, updateTransaction} from "./transaction";
 import {hideElements} from "../ui/hideElements";
 /// #if !BROWSER
-import {ipcRenderer} from "electron";
+import {platform} from "../../platform";
 /// #endif
 import {getEnableHTML, removeEmbed} from "./removeEmbed";
 import {keydown} from "./keydown";
@@ -2482,7 +2482,7 @@ export class WYSIWYG {
             }
             if (event.inputType === "historyUndo") {
                 /// #if !BROWSER
-                ipcRenderer.send(Constants.SIYUAN_CMD, "redo");
+                platform.redo();
                 /// #endif
                 window.siyuan.menus.menu.remove();
                 return;

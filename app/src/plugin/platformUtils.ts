@@ -1,7 +1,6 @@
 import * as compatibility from "../protyle/util/compatibility";
 /// #if !BROWSER
-import {ipcRenderer} from "electron";
-import {Constants} from "../constants";
+import {platform} from "../platform";
 /// #endif
 export const openByMobile = compatibility.openByMobile;
 export const readText = compatibility.readText;
@@ -70,12 +69,7 @@ export const sendNotification = (options: {
         }
         /// #else
         const timeoutId = window.setTimeout(() => {
-            ipcRenderer.send(Constants.SIYUAN_CMD, {
-                cmd: "notification",
-                title,
-                body,
-                timeoutType: options.timeoutType || "default"
-            });
+            platform.showNotification(title, body, options.timeoutType || "default");
         }, delayInSeconds * 1000);
         resolve(timeoutId);
         /// #endif

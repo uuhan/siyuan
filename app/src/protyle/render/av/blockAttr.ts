@@ -12,7 +12,9 @@ import {openLink} from "../../../editor/openLink";
 import {dragUpload, editAssetItem} from "./asset";
 import {previewImages} from "../../preview/image";
 /// #if !BROWSER
+/// #if !TAURI
 import {webUtils} from "electron";
+/// #endif
 /// #endif
 import {isBrowser} from "../../../util/functions";
 import {Constants} from "../../../constants";
@@ -278,7 +280,7 @@ class="fn__flex-1 fn__flex${["url", "text", "number", "email", "phone", "block"]
                             const files: ILocalFiles[] = [];
                             for (let i = 0; i < event.dataTransfer.files.length; i++) {
                                 files.push({
-                                    path: webUtils.getPathForFile(event.dataTransfer.files[i]),
+                                    path: typeof webUtils !== "undefined" ? webUtils.getPathForFile(event.dataTransfer.files[i]) : event.dataTransfer.files[i].name,
                                     size: event.dataTransfer.files[i].size
                                 });
                             }

@@ -16,6 +16,8 @@
     "build:mobile": "webpack --mode production --config webpack.mobile.js",
     "build:desktop": "webpack --mode production --config webpack.desktop.js",
     "build:export": "webpack --mode production --config webpack.export.js",
+    "dev:tauri": "webpack --mode development --config webpack.tauri.js",
+    "build:tauri": "webpack --mode production --config webpack.tauri.js",
     "gen:types": "tsc -d",
     "start": "NODE_ENV=development electron ./electron/main.js",
     "dist": "ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ electron-builder --config electron-builder.yml --publish=never",
@@ -50,6 +52,9 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.24.0",
+    "@tauri-apps/api": "^2.10.1",
+    "@tauri-apps/plugin-process": "^2.3.1",
+    "@tauri-apps/plugin-shell": "^2.3.5",
     "@types/node": "^18.13.0",
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
