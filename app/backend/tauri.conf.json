@@ -37,6 +37,12 @@
     ],
     "externalBin": [
       "SiYuan-Kernel"
-    ]
+    ],
+    "resources": {
+      "../appearance": "appearance",
+      "../stage": "stage",
+      "../guide": "guide",
+      "../changelogs": "changelogs"
+    }
   }
 }
