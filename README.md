@@ -3,7 +3,7 @@
 <br>
 <em>Refactor your thinking</em>
 <br><br>
-<a title="Build Status" target="_blank" href="https://github.com/siyuan-note/siyuan/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/siyuan-note/siyuan/cd.yml?style=flat-square"></a>
+<a title="Build Status" target="_blank" href="https://github.com/siyuan-note/siyuan/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/siyuan-note/siyuan/cd-tauri.yml?style=flat-square"></a>
 <a title="Releases" target="_blank" href="https://github.com/siyuan-note/siyuan/releases"><img src="https://img.shields.io/github/release/siyuan-note/siyuan.svg?style=flat-square&color=9CF"></a>
 <a title="Downloads" target="_blank" href="https://github.com/siyuan-note/siyuan/releases"><img src="https://img.shields.io/github/downloads/siyuan-note/siyuan/total.svg?style=flat-square&color=blueviolet"></a>
 <br>
@@ -188,7 +188,7 @@ The easiest way to serve SiYuan on a server is to deploy it through Docker.
 
 #### File structure
 
-The overall program is located under `/opt/siyuan/`, which is basically the structure under the resources folder of the Electron installation package:
+The overall program is located under `/opt/siyuan/`, which is basically the structure under the resources folder of the desktop installation package:
 
 * appearance: icon, theme, languages
 * guide: user guide document

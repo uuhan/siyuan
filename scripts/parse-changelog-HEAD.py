@@ -10,9 +10,9 @@ def generate_msg_from_repo(repo_name, args):
     if not pat:
         return None
 
-    action_file = "cd.yml"
+    action_file = "cd-tauri.yml"
     header = C.HEADER.get(repo_name,"")
-    print(U.generate_header_from_repo(repo_name, args.tag, args.lastestRelease, args.electronVersion, action_file, header))
+    print(U.generate_header_from_repo(repo_name, args.tag, args.lastestRelease, action_file, header))
 
 
 if __name__ == "__main__":
@@ -21,7 +21,6 @@ if __name__ == "__main__":
     )
     parser.add_argument("-t", "--tag", help="the tag to filter issues.")
     parser.add_argument("-b", "--lastestRelease", help="lastest Release")
-    parser.add_argument("-e", "--electronVersion", help="Electron Release")
     parser.add_argument("repo", help="The repository name")
     args = parser.parse_args()
 

@@ -48,14 +48,14 @@ done
 
 echo 'Cleaning Builds'
 rm -rf "$PROJECT_ROOT/app/build" 2>/dev/null || true
-rm -rf "$PROJECT_ROOT/app/kernel-linux" 2>/dev/null || true
-rm -rf "$PROJECT_ROOT/app/kernel-linux-arm64" 2>/dev/null || true
+rm -f "$PROJECT_ROOT/app/backend/SiYuan-Kernel-x86_64-unknown-linux-gnu" 2>/dev/null || true
+rm -f "$PROJECT_ROOT/app/backend/SiYuan-Kernel-aarch64-unknown-linux-gnu" 2>/dev/null || true
 
 echo
 echo 'Building UI'
 cd "$PROJECT_ROOT/app"
 pnpm install
-pnpm run build
+pnpm run build:tauri
 
 echo
 echo 'Building Kernel'
@@ -71,28 +71,28 @@ if [[ "$TARGET" == 'amd64' || "$TARGET" == 'all' ]]; then
     echo 'Building Kernel amd64'
     export GOARCH=amd64
     export CC=~/x86_64-linux-musl-cross/bin/x86_64-linux-musl-gcc
-    go build -buildmode=pie -tags fts5 -v -o "../app/kernel-linux/SiYuan-Kernel" -ldflags "-s -w -extldflags -static-pie" .
+    go build -buildmode=pie -tags fts5 -v -o "../app/backend/SiYuan-Kernel-x86_64-unknown-linux-gnu" -ldflags "-s -w -extldflags -static-pie" .
 fi
 if [[ "$TARGET" == 'arm64' || "$TARGET" == 'all' ]]; then
     echo
     echo 'Building Kernel arm64'
     export GOARCH=arm64
     export CC=~/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc
-    go build -buildmode=pie -tags fts5 -v -o "../app/kernel-linux-arm64/SiYuan-Kernel" -ldflags "-s -w -extldflags -static-pie" .
+    go build -buildmode=pie -tags fts5 -v -o "../app/backend/SiYuan-Kernel-aarch64-unknown-linux-gnu" -ldflags "-s -w -extldflags -static-pie" .
 fi
 
 echo
-echo 'Building Electron App'
-cd "$PROJECT_ROOT/app"
+echo 'Building Tauri App'
+cd "$PROJECT_ROOT/app/backend"
 if [[ "$TARGET" == 'amd64' || "$TARGET" == 'all' ]]; then
     echo
-    echo 'Building Electron App amd64'
-    pnpm run dist-linux
+    echo 'Building Tauri App amd64'
+    cargo tauri build --target x86_64-unknown-linux-gnu --bundles deb,appimage
 fi
 if [[ "$TARGET" == 'arm64' || "$TARGET" == 'all' ]]; then
     echo
-    echo 'Building Electron App arm64'
-    pnpm run dist-linux-arm64
+    echo 'Building Tauri App arm64'
+    cargo tauri build --target aarch64-unknown-linux-gnu --bundles deb,appimage
 fi
 
 echo

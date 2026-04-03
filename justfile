@@ -107,11 +107,7 @@ kernel-clean:
 frontend:
     cd {{app_dir}} && pnpm build:tauri
 
-# Build frontend for Electron
-frontend-electron:
-    cd {{app_dir}} && pnpm build:app
-
-# Build all frontend targets (Electron + Tauri + mobile + desktop + export)
+# Build all frontend targets
 frontend-all:
     cd {{app_dir}} && pnpm build
 
@@ -227,16 +223,6 @@ dist-linux: kernel frontend
 [windows]
 dist-msi: kernel frontend
     cd {{backend_dir}} && cargo tauri build --target {{rust_target}} --bundles msi
-
-# ── Electron (legacy) ──────────────────────────────────────────────────
-
-# Build and run with Electron (legacy)
-electron-dev:
-    cd {{app_dir}} && pnpm build:app && pnpm start
-
-# Package with Electron for current platform
-electron-dist:
-    cd {{app_dir}} && pnpm dist
 
 # ── Cleanup ─────────────────────────────────────────────────────────────
 

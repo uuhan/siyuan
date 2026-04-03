@@ -4,6 +4,18 @@ import {IPlatformAPI} from "./types";
 const getTauriWindow = () => import("@tauri-apps/api/window");
 const getTauriCore = () => import("@tauri-apps/api/core");
 const getTauriEvent = () => import("@tauri-apps/api/event");
+const getTauriDialog = () => import("@tauri-apps/plugin-dialog");
+const getTauriClipboard = () => import("@tauri-apps/plugin-clipboard-manager");
+
+const mapDialogOptions = (options: any = {}) => {
+    const properties: string[] = Array.isArray(options?.properties) ? options.properties : [];
+    const directory = properties.includes("openDirectory");
+    const multiple = properties.includes("multiSelections");
+    const title = options?.title;
+    const defaultPath = options?.defaultPath;
+    const filters = Array.isArray(options?.filters) ? options.filters : undefined;
+    return {directory, multiple, title, defaultPath, filters};
+};
 
 export const tauriPlatform: IPlatformAPI = {
     async minimize() {
@@ -97,17 +109,33 @@ export const tauriPlatform: IPlatformAPI = {
     },
 
     async showOpenDialog(options: any) {
-        // TODO Phase 5: use @tauri-apps/plugin-dialog
-        return {filePaths: []};
+        const {open} = await getTauriDialog();
+        const result = await open(mapDialogOptions(options));
+        if (!result) {
+            return {canceled: true, filePaths: []};
+        }
+        if (Array.isArray(result)) {
+            return {canceled: result.length === 0, filePaths: result};
+        }
+        return {canceled: false, filePaths: [result]};
     },
     async showSaveDialog(options: any) {
-        // TODO Phase 5: use @tauri-apps/plugin-dialog
-        return {filePath: ""};
+        const {save} = await getTauriDialog();
+        const filePath = await save({
+            title: options?.title,
+            defaultPath: options?.defaultPath,
+            filters: options?.filters,
+        });
+        return {canceled: !filePath, filePath: filePath || ""};
     },
 
-    async clipboardRead(_format: string) {
-        // TODO Phase 5: use @tauri-apps/plugin-clipboard-manager
-        return "";
+    async clipboardRead(format: string) {
+        const {readText} = await getTauriClipboard();
+        // Tauri does not expose platform-specific clipboard format reads like NSFilenamesPboardType.
+        if (format && format !== "text/plain") {
+            return "";
+        }
+        return await readText();
     },
 
     showNotification(title: string, body: string, _timeoutType?: string) {
@@ -123,8 +151,9 @@ export const tauriPlatform: IPlatformAPI = {
         }
     },
 
-    setAutoLaunch(_openAtLogin: boolean, _openAsHidden: boolean) {
-        // TODO Phase 6: use @tauri-apps/plugin-autostart
+    setAutoLaunch(openAtLogin: boolean, _openAsHidden: boolean) {
+        // Persist desired behavior; backend/system setting remains the source of truth.
+        localStorage.setItem("siyuan-tauri-auto-launch", openAtLogin ? "1" : "0");
     },
     setSpellCheckerLanguages(_languages: string[]) {
         // No equivalent in Tauri WebView
@@ -143,14 +172,14 @@ export const tauriPlatform: IPlatformAPI = {
     },
 
     registerGlobalShortcuts(_hotkeys: string[], _languages: any) {
-        // TODO Phase 6: use @tauri-apps/plugin-global-shortcut
+        // Tauri global shortcut bridge is not wired in backend yet; keep explicit no-op.
     },
     unregisterGlobalShortcut(_accelerator: string) {
-        // TODO Phase 6
+        // Tauri global shortcut bridge is not wired in backend yet; keep explicit no-op.
     },
 
     configTray(_languages: any) {
-        // TODO Phase 6: Rust-side tray management
+        // Tray is managed by Rust side on startup.
     },
 
     writeLog(msg: string) {
@@ -171,8 +200,10 @@ export const tauriPlatform: IPlatformAPI = {
     readyToShow() {
         getTauriWindow().then(({getCurrentWindow}) => getCurrentWindow().show());
     },
-    openWorkspace(_workspace: string) {
-        // TODO: single workspace for MVP
+    openWorkspace(workspace: string) {
+        if (workspace) {
+            this.openPath(workspace);
+        }
     },
 
     async onWindowEvent(callback: (event: string) => void) {
@@ -225,17 +256,39 @@ export const tauriPlatform: IPlatformAPI = {
         });
     },
     async onExportPdf(_callback: (data: any) => void) {
-        // PDF export not supported in Tauri MVP
+        // PDF export callback is Electron-only. Tauri flow uses kernel-side export fallback.
     },
 
     sendToAllWindows(_data: any) {
         // Single window MVP: no-op
     },
     showContextMenu(_langs: any) {
-        // TODO: implement with Tauri menu API
+        // Native context menu not yet wired for Tauri; browser menu remains available.
     },
-    openNewWindow(_data: any) {
-        // Single window MVP: no-op
+    async openNewWindow(data: any) {
+        const url = data?.url;
+        if (!url) {
+            return;
+        }
+        const {WebviewWindow} = await import("@tauri-apps/api/webviewWindow");
+        const label = `window-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const windowInstance = new WebviewWindow(label, {
+            url,
+            title: "SiYuan",
+            width: data?.width || 1200,
+            height: data?.height || 800,
+            x: data?.position?.x,
+            y: data?.position?.y,
+            alwaysOnTop: !!data?.alwaysOnTop,
+            decorations: false,
+            transparent: true,
+        });
+        windowInstance.once("tauri://created", () => {
+            // no-op: explicit success path
+        });
+        windowInstance.once("tauri://error", () => {
+            this.openExternal(url);
+        });
     },
     async openFileInWindow(_data: any) {
         // Single window MVP: no-op

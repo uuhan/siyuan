@@ -12,12 +12,9 @@ Install pnpm: `npm install -g pnpm@10.33.0`
 <details>
 <summary>For China mainland</summary>
 
-Set the Electron mirror environment variable and install Electron:
+Install dependencies:
 
-* macOS/Linux: `ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ pnpm install electron@40.8.5 -D`
-* Windows:
-  * `SET ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/`
-  * `pnpm install electron@40.8.5 -D`
+* `pnpm install --no-frozen-lockfile`
 
 NPM mirror:
 
@@ -27,9 +24,8 @@ NPM mirror:
 
 Enter the app folder and execute:
 
-* `pnpm install electron@40.8.5 -D`
-* `pnpm run dev`
-* `pnpm run start`
+* `pnpm install --no-frozen-lockfile`
+* `pnpm run dev:tauri`
 
 Note: In the development environment, the kernel process will not be automatically started, and you need to manually start the kernel process first.
 
