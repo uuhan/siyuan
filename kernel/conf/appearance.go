@@ -36,6 +36,7 @@ type Appearance struct {
 	CloseButtonBehavior int                `json:"closeButtonBehavior"` // 关闭按钮行为，0：退出，1：最小化到托盘
 	HideStatusBar       bool               `json:"hideStatusBar"`       // 是否隐藏底部状态栏
 	StatusBar           *util.StatusBar    `json:"statusBar"`           // 底部状态栏配置
+	EmojiFont           string             `json:"emojiFont"`           // 表情符号字体：""：Noto Color Emoji，"twemoji"：Twemoji Mozilla
 }
 
 func NewAppearance() *Appearance {

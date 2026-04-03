@@ -261,6 +261,12 @@ declare namespace Config {
          */
         themeVer: string;
         statusBar: IAppearanceStatusBar;
+        /**
+         * The emoji font to use in the interface
+         * - `""`: Noto Color Emoji (bundled, default)
+         * - `"twemoji"`: Twemoji Mozilla (must be installed on the system)
+         */
+        emojiFont: string;
     }
 
     export interface IAppearanceStatusBar {

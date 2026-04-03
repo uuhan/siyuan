@@ -289,6 +289,22 @@ export const setInlineStyle = async (set = true, servePath = "../../../") => {
     }
     style += `\n:root { --b3-font-size-editor: ${window.siyuan.config.editor.fontSize}px }
 .b3-typography code:not(.hljs), .protyle-wysiwyg span[data-type~=code] { font-variant-ligatures: ${window.siyuan.config.editor.codeLigatures ? "normal" : "none"} }${window.siyuan.config.editor.justify ? "\n.protyle-wysiwyg [data-node-id] { text-align: justify }" : ""}`;
+    if (window.siyuan.config.appearance.emojiFont === "twemoji") {
+        style += `
+@font-face {
+  font-family: "Emojis";
+  src: local("Twemoji Mozilla");
+}
+@font-face {
+  font-family: "Emojis Additional";
+  src: local("Twemoji Mozilla");
+}
+@font-face {
+  font-family: "Emojis Reset";
+  src: local("Twemoji Mozilla");
+}
+:root { --b3-font-family-emoji: "Twemoji Mozilla", "Emojis"; }`;
+    }
     if (window.siyuan.config.editor.rtl) {
         style += `\n.protyle-title__input,
 .protyle-wysiwyg .p,

@@ -120,6 +120,17 @@ export const appearance = {
         ${window.siyuan.languages.showInFolder}
     </button>
 </div>
+<div class="fn__flex b3-label config__item">
+    <div class="fn__flex-1">
+        ${window.siyuan.languages.emojiFont}
+        <div class="b3-label__text">${window.siyuan.languages.emojiFontTip}</div>
+    </div>
+    <span class="fn__space"></span>
+    <select class="b3-select fn__flex-center fn__size200" id="emojiFont">
+        <option value="" ${window.siyuan.config.appearance.emojiFont === "" ? "selected" : ""}>${window.siyuan.languages.emojiFontNoto}</option>
+        <option value="twemoji" ${window.siyuan.config.appearance.emojiFont === "twemoji" ? "selected" : ""}>${window.siyuan.languages.emojiFontTwemoji}</option>
+    </select>
+</div>
 <div class="b3-label fn__flex config__item">
    <div class="fn__flex-1">
         ${window.siyuan.languages.resetLayout}
@@ -200,6 +211,7 @@ export const appearance = {
             lang: (appearance.element.querySelector("#lang") as HTMLSelectElement).value,
             closeButtonBehavior: (appearance.element.querySelector("#closeButtonBehavior") as HTMLInputElement).checked ? 1 : 0,
             hideStatusBar: (appearance.element.querySelector("#hideStatusBar") as HTMLInputElement).checked,
+            emojiFont: (appearance.element.querySelector("#emojiFont") as HTMLSelectElement).value,
             statusBar: {
                 msgTaskDatabaseIndexCommitDisabled: window.siyuan.config.appearance.statusBar.msgTaskDatabaseIndexCommitDisabled,
                 msgTaskHistoryDatabaseIndexCommitDisabled: window.siyuan.config.appearance.statusBar.msgTaskHistoryDatabaseIndexCommitDisabled,
