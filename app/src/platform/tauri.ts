@@ -240,7 +240,8 @@ export const tauriPlatform: IPlatformAPI = {
         const {getCurrentWindow} = await getTauriWindow();
         getCurrentWindow().onCloseRequested(async (event) => {
             event.preventDefault();
-            callback(true);
+            // Pass false = hide to tray (not a real close)
+            callback(false);
         });
     },
     async onSendWindows(callback: (data: any) => void) {

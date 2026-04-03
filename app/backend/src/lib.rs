@@ -38,13 +38,10 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { .. } = event {
-                let app = window.app_handle().clone();
-                tauri::async_runtime::spawn(async move {
-                    if let Some(state) = app.try_state::<kernel::KernelState>() {
-                        let _ = kernel::shutdown_kernel(state.port()).await;
-                    }
-                });
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                // Hide to tray instead of quitting
+                api.prevent_close();
+                let _ = window.hide();
             }
         })
         .run(tauri::generate_context!())
